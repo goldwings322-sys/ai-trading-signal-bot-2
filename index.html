@@ -3,46 +3,76 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Trading Signal Bot</title>
+<title>AI Trading Signal Dashboard</title>
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;padding:18px;background:#0b1020;color:white;font-family:Arial}
-header{text-align:center;padding:18px}
-h1{color:#42d9ff}
-.card{background:#151d30;border:1px solid #293752;border-radius:15px;padding:18px;margin:15px 0}
-label{display:block;margin:14px 0 7px}
-select,button{width:100%;padding:13px;border-radius:9px;font-size:16px}
-select{background:#0b1020;color:white;border:1px solid #344461}
-button{background:#147dce;color:white;border:0;font-weight:bold;margin-top:18px}
-.signal{text-align:center;padding:22px}
-#signal{font-size:28px;font-weight:bold;color:#ffd166;margin:15px}
-.small{font-size:13px;color:#bdc9df;line-height:1.6}
+body{
+  margin:0;padding:15px;
+  background:#080e1b;color:#fff;
+  font-family:Arial,sans-serif
+}
+header{text-align:center;padding:12px}
+h1{color:#42d9ff;font-size:25px}
+.card{
+  background:#131e30;
+  border:1px solid #293a55;
+  border-radius:14px;
+  padding:15px;margin:14px 0
+}
+label{display:block;margin:12px 0 6px}
+select,button{
+  width:100%;padding:12px;
+  border-radius:8px;font-size:15px
+}
+select{
+  background:#091221;color:white;
+  border:1px solid #40516b
+}
+button{
+  background:#087dcc;color:white;
+  border:0;font-weight:bold;margin-top:15px
+}
+.chart{
+  width:100%;height:430px;
+  overflow:hidden;border-radius:10px
+}
+.chart iframe{
+  width:100%;height:100%;border:0
+}
+#signal{
+  font-size:25px;font-weight:bold;
+  color:#ffd166;margin:12px 0
+}
+.note{font-size:13px;color:#b8c7dc;line-height:1.6}
 </style>
 </head>
+
 <body>
+
 <header>
-<h1>AI SIGNAL BOT</h1>
-<div>Trading Analysis Dashboard</div>
+<h1>AI TRADING SIGNALS</h1>
+<div>Live Chart & Market Analysis</div>
 </header>
 
 <div class="card">
 <label>Broker</label>
 <select id="broker">
-<option>Generic Market Data</option>
-<option>Quotex</option>
-<option>Pocket Option</option>
-<option>Other Broker</option>
+<option value="TradingView">TradingView Chart</option>
+<option value="Quotex">Quotex</option>
+<option value="Pocket Option">Pocket Option</option>
+<option value="Other">Other Broker</option>
 </select>
 
 <label>Currency Pair</label>
-<select id="pair">
-<option>EUR/USD</option>
-<option>GBP/USD</option>
-<option>USD/JPY</option>
-<option>AUD/USD</option>
+<select id="pair" onchange="changeChart()">
+<option value="FX:EURUSD">EUR/USD</option>
+<option value="FX:GBPUSD">GBP/USD</option>
+<option value="FX:USDJPY">USD/JPY</option>
+<option value="FX:AUDUSD">AUD/USD</option>
 </select>
 
-<label>Duration</label>
+<label>Signal Duration</label>
 <select id="duration">
 <option value="5">5 seconds</option>
 <option value="10">10 seconds</option>
@@ -50,44 +80,76 @@ button{background:#147dce;color:white;border:0;font-weight:bold;margin-top:18px}
 <option value="30">30 seconds</option>
 <option value="60" selected>1 minute</option>
 </select>
+</div>
 
+<div class="card">
+<h3>📈 Live Market Chart</h3>
+<div class="chart">
+<iframe id="chartFrame"
+title="TradingView Market Chart"
+src="https://s.tradingview.com/widgetembed/?symbol=FX%3AEURUSD&interval=1&hidesidetoolbar=1&symboledit=1&saveimage=0&toolbarbg=0b1220&theme=dark&style=1&withdateranges=1&hideideas=1&allow_symbol_change=true"
+allowfullscreen>
+</iframe>
+</div>
+<p class="note">
+Chart data is provided by TradingView. Quotes may differ
+from your broker's prices.
+</p>
+</div>
+
+<div class="card">
+<h3>🧠 Signal Analysis</h3>
+<div id="signal">WAITING FOR DATA</div>
+<div id="details" class="note">
+Live chart displayed. The signal engine is not connected yet.
+</div>
 <button onclick="analyze()">ANALYZE MARKET</button>
 </div>
 
-<div class="card signal">
-<div>ANALYSIS RESULT</div>
-<div id="signal">WAITING</div>
-<div id="details" class="small">Market data is not connected.</div>
+<div class="card">
+<h3>📋 Signal History</h3>
+<div id="history" class="note">No analysis yet.</div>
 </div>
 
 <div class="card">
-<h3>Strategy</h3>
-<div class="small">
-EMA 9/21: Trend analysis<br>
-RSI 14: Momentum confirmation<br>
-MACD: Additional confirmation<br><br>
-Live price data is required for actual signals.
-</div>
-</div>
-
-<div class="card">
-<h3>Signal History</h3>
-<div id="history" class="small">No analysis yet.</div>
+<p class="note">
+Strategy planned: EMA 9/21 + RSI 14 + MACD confirmation.
+Signals will be enabled after the market-data feed is connected.
+No automatic trading is performed.
+</p>
 </div>
 
 <script>
-function analyze(){
-document.getElementById("signal").textContent="NO LIVE DATA";
-document.getElementById("details").textContent=
-"Pair: "+document.getElementById("pair").value+
-" | Duration: "+document.getElementById("duration").value+
-" seconds | Broker: "+document.getElementById("broker").value+
-". Connect a market data feed to calculate actual signals.";
+function changeChart(){
+  const pair=document.getElementById('pair').value;
+  const frame=document.getElementById('chartFrame');
+  frame.src=
+  'https://s.tradingview.com/widgetembed/?symbol='+
+  encodeURIComponent(pair)+
+  '&interval=1&hidesidetoolbar=1&symboledit=1'+
+  '&saveimage=0&toolbarbg=0b1220&theme=dark'+
+  '&style=1&withdateranges=1&hideideas=1&allow_symbol_change=true';
+}
 
-let row=document.createElement("p");
-row.textContent=new Date().toLocaleTimeString()+" — No live data";
-document.getElementById("history").prepend(row);
+function analyze(){
+  const pair=document.getElementById('pair');
+  const duration=document.getElementById('duration');
+  const broker=document.getElementById('broker');
+
+  document.getElementById('signal').textContent='NO LIVE SIGNAL';
+  document.getElementById('details').textContent=
+    'Market-data feed and EMA/RSI analysis engine are not connected. '+
+    'Pair: '+pair.options[pair.selectedIndex].text+
+    ' | Duration: '+duration.value+' seconds'+
+    ' | Broker: '+broker.options[broker.selectedIndex].text+
+    '. No BUY/SELL recommendation generated.';
+
+  const row=document.createElement('p');
+  row.textContent=new Date().toLocaleTimeString()+
+    ' — Waiting for market data';
+  document.getElementById('history').prepend(row);
 }
 </script>
+
 </body>
 </html>
