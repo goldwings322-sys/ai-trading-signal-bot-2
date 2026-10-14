@@ -2,26 +2,92 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Trading Signal Bot</title>
 <style>
 *{box-sizing:border-box}
-body{
-  margin:0;padding:18px;
-  background:#0b1020;color:#fff;
-  font-family:Arial,sans-serif
+body{margin:0;padding:18px;background:#0b1020;color:white;font-family:Arial}
+header{text-align:center;padding:18px}
+h1{color:#42d9ff}
+.card{background:#151d30;border:1px solid #293752;border-radius:15px;padding:18px;margin:15px 0}
+label{display:block;margin:14px 0 7px}
+select,button{width:100%;padding:13px;border-radius:9px;font-size:16px}
+select{background:#0b1020;color:white;border:1px solid #344461}
+button{background:#147dce;color:white;border:0;font-weight:bold;margin-top:18px}
+.signal{text-align:center;padding:22px}
+#signal{font-size:28px;font-weight:bold;color:#ffd166;margin:15px}
+.small{font-size:13px;color:#bdc9df;line-height:1.6}
+</style>
+</head>
+<body>
+<header>
+<h1>AI SIGNAL BOT</h1>
+<div>Trading Analysis Dashboard</div>
+</header>
+
+<div class="card">
+<label>Broker</label>
+<select id="broker">
+<option>Generic Market Data</option>
+<option>Quotex</option>
+<option>Pocket Option</option>
+<option>Other Broker</option>
+</select>
+
+<label>Currency Pair</label>
+<select id="pair">
+<option>EUR/USD</option>
+<option>GBP/USD</option>
+<option>USD/JPY</option>
+<option>AUD/USD</option>
+</select>
+
+<label>Duration</label>
+<select id="duration">
+<option value="5">5 seconds</option>
+<option value="10">10 seconds</option>
+<option value="15">15 seconds</option>
+<option value="30">30 seconds</option>
+<option value="60" selected>1 minute</option>
+</select>
+
+<button onclick="analyze()">ANALYZE MARKET</button>
+</div>
+
+<div class="card signal">
+<div>ANALYSIS RESULT</div>
+<div id="signal">WAITING</div>
+<div id="details" class="small">Market data is not connected.</div>
+</div>
+
+<div class="card">
+<h3>Strategy</h3>
+<div class="small">
+EMA 9/21: Trend analysis<br>
+RSI 14: Momentum confirmation<br>
+MACD: Additional confirmation<br><br>
+Live price data is required for actual signals.
+</div>
+</div>
+
+<div class="card">
+<h3>Signal History</h3>
+<div id="history" class="small">No analysis yet.</div>
+</div>
+
+<script>
+function analyze(){
+document.getElementById("signal").textContent="NO LIVE DATA";
+document.getElementById("details").textContent=
+"Pair: "+document.getElementById("pair").value+
+" | Duration: "+document.getElementById("duration").value+
+" seconds | Broker: "+document.getElementById("broker").value+
+". Connect a market data feed to calculate actual signals.";
+
+let row=document.createElement("p");
+row.textContent=new Date().toLocaleTimeString()+" — No live data";
+document.getElementById("history").prepend(row);
 }
-header{text-align:center;padding:18px 0}
-header h1{color:#42d9ff;margin-bottom:6px}
-.card{
-  background:#151d30;border:1px solid #293752;
-  border-radius:15px;padding:18px;margin:15px 0
-}
-label{display:block;margin:14px 0 7px;color:#bdc9df}
-select,button{
-  width:100%;padding:13px;border-radius:9px;
-  border:1px solid #344461;font-size:16px
-}
-select{background:#0b1020;color:white}
-button{
-  background:#147d
+</script>
+</body>
+</html>
