@@ -1,62 +1,476 @@
-function getSignal(emaFast, emaSlow, rsi, bars) {
-  if (
-    emaFast === null ||
-    emaSlow === null ||
-    rsi === null ||
-    !bars ||
-    bars.length < 2
-  ) {
-    return "WAIT";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Trading Signal Bot</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1120;color:#e5e7eb;font-family:Arial,sans-serif}
+main{max-width:850px;margin:auto;padding:15px}
+h1{text-align:center;color:#38bdf8}
+h2{font-size:20px}
+p{line-height:1.5}
+.card{background:#151f32;border:1px solid #29364c;border-radius:12px;padding:15px;margin:14px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.field{flex:1;min-width:130px}
+label{display:block;color:#94a3b8;margin:8px 0}
+select,button{width:100%;padding:12px;border-radius:8px;background:#0b1120;color:white;border:1px solid #37465e}
+button{background:#0284c7;border:0;margin-top:12px;font-weight:bold}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stat{background:#0b1120;padding:12px;border-radius:8px;overflow-wrap:anywhere}
+.stat span{display:block;color:#94a3b8;font-size:13px}
+.stat strong{display:block;font-size:20px;margin-top:7px}
+.signal{text-align:center;background:#0b1120;border-radius:10px;padding:22px}
+.signal strong{display:block;font-size:34px}
+.buy{color:#4ade80}.sell{color:#fb7185}.wait{color:#facc15}
+.muted{color:#94a3b8;font-size:13px}
+.warning{background:#422006;color:#fde68a;padding:12px;border-radius:8px;line-height:1.5}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:9px 5px;border-bottom:1px solid #29364c}
+iframe{width:100%;height:380px;border:0}
+@media(max-width:450px){main{padding:10px}iframe{height:330px}}
+</style>
+</head>
+
+<body>
+<main>
+<h1>⚡ AI Trading Signal Bot</h1>
+<p class="muted" style="text-align:center">EUR/USD • EMA 9/21 • RSI 14 • Signals only</p>
+
+<div class="card">
+<h2>⚙️ Settings</h2>
+<div class="row">
+<div class="field">
+<label for="broker">Platform</label>
+<select id="broker">
+<option>TradingView</option>
+<option>Quotex</option>
+<option>Pocket Option</option>
+<option>Other</option>
+</select>
+</div>
+
+<div class="field">
+<label for="pair">Currency Pair</label>
+<select id="pair">
+<option value="EURUSD">EUR/USD</option>
+<option value="GBPUSD">GBP/USD</option>
+<option value="USDJPY">USD/JPY</option>
+<option value="AUDUSD">AUD/USD</option>
+</select>
+</div>
+
+<div class="field">
+<label for="mode">Market</label>
+<select id="mode">
+<option value="forex">Forex</option>
+<option value="otc">OTC — unverified</option>
+</select>
+</div>
+</div>
+
+<button id="analyze">🔄 Analyze Now</button>
+<p class="muted">Next refresh: <strong id="countdown">60</strong> seconds</p>
+<p id="status" class="muted">Connecting to price feed...</p>
+</div>
+
+<div id="otcWarning" class="warning" hidden>
+⚠️ OTC prices are not verified. This bot uses the BiQuote API,
+not a confirmed Quotex OTC feed. Do not treat these as verified OTC signals.
+</div>
+
+<div class="card">
+<h2>📡 Current Signal</h2>
+<div class="signal">
+<strong id="signal" class="wait">WAIT</strong>
+<p id="reason">Waiting for data...</p>
+</div>
+
+<div class="stats" style="margin-top:12px">
+<div class="stat"><span>Latest closed price</span><strong id="price">--</strong></div>
+<div class="stat"><span>EMA 9</span><strong id="ema9">--</strong></div>
+<div class="stat"><span>EMA 21</span><strong id="ema21">--</strong></div>
+<div class="stat"><span>RSI 14</span><strong id="rsi">--</strong></div>
+<div class="stat"><span>Last candle</span><strong id="candle">--</strong></div>
+<div class="stat"><span>Pair</span><strong id="pairLabel">EUR/USD</strong></div>
+</div>
+<p class="muted">
+BUY: bullish trend or confirmed recovery. SELL: bearish trend or
+confirmed rejection. WAIT: conditions are not confirmed.
+</p>
+</div>
+
+<div class="card">
+<h2>📈 TradingView Chart</h2>
+<iframe id="chart" title="TradingView chart"
+src="https://s.tradingview.com/widgetembed/?symbol=FX%3AEURUSD&interval=1&theme=dark&style=1&locale=en"
+allowfullscreen></iframe>
+<p class="muted">The chart feed may differ from the signal data feed.</p>
+</div>
+
+<div class="card">
+<h2>📊 Signal Performance</h2>
+<div class="stats">
+<div class="stat"><span>Settled results</span><strong id="total">0</strong></div>
+<div class="stat"><span>Wins</span><strong id="wins" class="buy">0</strong></div>
+<div class="stat"><span>Losses</span><strong id="losses" class="sell">0</strong></div>
+<div class="stat"><span>Accuracy</span><strong id="accuracy">--</strong></div>
+</div>
+<p class="muted">
+Results compare the next completed candle close with the signal candle close.
+This is only a simple price comparison, not actual broker trade performance.
+</p>
+</div>
+
+<div class="card">
+<h2>🧾 Signal History</h2>
+<div class="tablewrap">
+<table>
+<thead><tr><th>Time</th><th>Pair</th><th>Signal</th><th>Entry</th><th>Result</th></tr></thead>
+<tbody id="history"><tr><td colspan="5">No signals yet.</td></tr></tbody>
+</table>
+</div>
+<button id="clear" style="background:#7f1d1d">Clear History</button>
+<p class="muted">History is saved in this browser on this device.</p>
+</div>
+
+<div class="warning">
+⚠️ Educational tool only. No automatic trading is performed.
+Signals are not guaranteed to be accurate or profitable. Test on a demo account.
+</div>
+</main>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+const STORAGE = "ai_signal_bot_history_v3";
+let records = loadRecords();
+let lastBarByPair = {};
+let busy = false;
+let countdown = 60;
+
+function loadRecords(){
+  try {
+    const x = JSON.parse(localStorage.getItem(STORAGE) || "[]");
+    return Array.isArray(x) ? x : [];
+  } catch(e) { return []; }
+}
+
+function saveRecords(){
+  records = records.slice(0,100);
+  try { localStorage.setItem(STORAGE,JSON.stringify(records)); }
+  catch(e) { console.warn("History could not be saved",e); }
+}
+
+function priceFormat(n,pair){
+  if(!Number.isFinite(n)) return "--";
+  return n.toFixed(pair.endsWith("JPY") ? 3 : 5);
+}
+
+function getTime(bar){
+  let t = bar.openTime ?? bar.open_time ?? bar.timestamp ??
+          bar.time ?? bar.t ?? bar.date;
+  if(t === undefined || t === null) return null;
+  if(typeof t === "number" || /^\d+$/.test(String(t))){
+    t = Number(t);
+    if(t < 1e12) t *= 1000;
+  } else {
+    t = Date.parse(t);
+  }
+  return Number.isFinite(t) ? t : null;
+}
+
+function parseBars(json){
+  let a = Array.isArray(json) ? json :
+          json.bars || json.data || json.candles || json.ohlc || [];
+
+  if(!Array.isArray(a)) return [];
+
+  return a.map(b => ({
+    time:getTime(b),
+    open:Number(b.open ?? b.o),
+    high:Number(b.high ?? b.h),
+    low:Number(b.low ?? b.l),
+    close:Number(b.close ?? b.c),
+    isOpen:b.isOpen === true || b.is_open === true
+  })).filter(b =>
+    b.time !== null &&
+    Number.isFinite(b.open) &&
+    Number.isFinite(b.high) &&
+    Number.isFinite(b.low) &&
+    Number.isFinite(b.close)
+  ).sort((a,b)=>a.time-b.time);
+}
+
+async function fetchBars(pair){
+  const url = "https://biquote.io/api/" + encodeURIComponent(pair) +
+              "/ohlc?interval=1m&limit=100";
+
+  const response = await fetch(url,{cache:"no-store"});
+  if(!response.ok) throw Error("API HTTP error: "+response.status);
+
+  const json = await response.json();
+  const all = parseBars(json);
+  const bars = all.filter(b=>!b.isOpen);
+
+  if(bars.length < 30){
+    throw Error("Not enough completed candles in the API response.");
+  }
+  return bars;
+}
+
+function ema(values,period){
+  if(values.length < period) return null;
+  const k=2/(period+1);
+  let v=values.slice(0,period).reduce((a,b)=>a+b,0)/period;
+  for(let i=period;i<values.length;i++){
+    v=values[i]*k+v*(1-k);
+  }
+  return v;
+}
+
+function rsi(values,period=14){
+  if(values.length<=period) return null;
+  let gain=0,loss=0;
+  for(let i=1;i<=period;i++){
+    const d=values[i]-values[i-1];
+    if(d>0) gain+=d;
+    else loss-=d;
+  }
+  gain/=period;
+  loss/=period;
+
+  for(let i=period+1;i<values.length;i++){
+    const d=values[i]-values[i-1];
+    gain=(gain*(period-1)+Math.max(d,0))/period;
+    loss=(loss*(period-1)+Math.max(-d,0))/period;
   }
 
-  const last = bars[bars.length - 1];
-  const previous = bars[bars.length - 2];
+  if(gain===0 && loss===0) return 50;
+  if(loss===0) return 100;
+  if(gain===0) return 0;
+  return 100-100/(1+gain/loss);
+}
 
-  const bullishCandle = last.close > last.open;
-  const bearishCandle = last.close < last.open;
+/*
+ Flexible signal rules:
+ 1. Trend signals require EMA alignment and candle confirmation.
+ 2. Reversal signals require RSI recovery/rejection and candle confirmation.
+ 3. Signals use completed candles only.
+*/
+function getSignal(fast,slow,rsiNow,previousRsi,bars){
+  if(fast===null || slow===null || rsiNow===null ||
+     bars.length<2) return "WAIT";
 
-  // Flexible BUY:
-  // Uptrend with bullish candle, or recovery from oversold RSI.
-  const buyTrend =
-    emaFast > emaSlow &&
-    rsi > 30 &&
-    rsi < 70 &&
-    bullishCandle;
+  const last=bars[bars.length-1];
+  const prev=bars[bars.length-2];
+  const bullish=last.close>last.open && last.close>prev.close;
+  const bearish=last.close<last.open && last.close<prev.close;
 
-  const buyRecovery =
-    rsi > 20 &&
-    rsi < 35 &&
-    rsi > calculateRSI(
-      bars.slice(0, -1).map(bar => bar.close),
-      14
-    ) &&
-    bullishCandle &&
-    last.close > previous.close;
+  const buyTrend=fast>slow && rsiNow>35 && rsiNow<70 && bullish;
+  const sellTrend=fast<slow && rsiNow>30 && rsiNow<65 && bearish;
 
-  // Flexible SELL:
-  // Downtrend with bearish candle, or rejection from overbought RSI.
-  const sellTrend =
-    emaFast < emaSlow &&
-    rsi > 40 &&
-    rsi < 65 &&
-    bearishCandle;
-  const previousRSI = calculateRSI(
-    bars.slice(0, -1).map(bar => bar.close),
-    14
-  );
+  const buyRecovery=
+    rsiNow>20 && rsiNow<35 &&
+    previousRsi!==null && rsiNow>previousRsi && bullish;
 
-  const sellReversal =
-    rsi < 80 &&
-    rsi > 65 &&
-    previousRSI !== null &&
-    rsi < previousRSI &&
-    bearishCandle &&
-    last.close < previous.close;
+  const sellReversal=
+    rsiNow>65 && rsiNow<80 &&
+    previousRsi!==null && rsiNow<previousRsi && bearish;
 
-  if (buyRecovery) return "BUY";
-  if (sellReversal) return "SELL";
-  if (buyTrend) return "BUY";
-  if (sellTrend) return "SELL";
+  if(buyRecovery) return "BUY";
+  if(sellReversal) return "SELL";
+  if(buyTrend) return "BUY";
+  if(sellTrend) return "SELL";
 
   return "WAIT";
 }
+
+function updateChart(pair){
+  $("chart").src=
+    "https://s.tradingview.com/widgetembed/?symbol=FX%3A"+
+    pair+"&interval=1&theme=dark&style=1&locale=en";
+}
+
+function addRecord(pair,bar,signal){
+  if(signal==="WAIT") return;
+
+  const id=pair+"_"+bar.time+"_"+signal;
+  if(records.some(r=>r.id===id)) return;
+
+  records.unshift({
+    id,pair,time:bar.time,signal,
+    entry:bar.close,result:"PENDING",
+    checkedBar:null
+  });
+  saveRecords();
+}
+
+function settle(pair,bars){
+  const last=bars[bars.length-1];
+
+  records.forEach(r=>{
+    if(r.pair!==pair || r.result!=="PENDING") return;
+    if(last.time<=r.time || last.time===r.checkedBar) return;
+
+    r.checkedBar=last.time;
+
+    if(last.close===r.entry) r.result="TIE";
+    else if((r.signal==="BUY" && last.close>r.entry) ||
+            (r.signal==="SELL" && last.close<r.entry)){
+      r.result="WIN";
+    } else {
+      r.result="LOSS";
+    }
+  });
+  saveRecords();
+}
+
+function safe(s){
+  return String(s).replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[c]);
+}
+
+function render(){
+  const body=$("history");
+  body.innerHTML=records.length ? records.slice(0,30).map(r=>`
+    <tr>
+      <td>${safe(new Date(r.time).toLocaleTimeString())}</td>
+      <td>${safe(r.pair)}</td>
+      <td class="${r.signal==="BUY"?"buy":"sell"}">${r.signal}</td>
+      <td>${priceFormat(Number(r.entry),r.pair)}</td>
+      <td class="${r.result==="WIN"?"buy":r.result==="LOSS"?"sell":"wait"}">${safe(r.result)}</td>
+    </tr>`).join("") :
+    '<tr><td colspan="5">No signals yet.</td></tr>';
+
+  const settled=records.filter(r=>["WIN","LOSS","TIE"].includes(r.result));
+  const wins=settled.filter(r=>r.result==="WIN").length;
+  const losses=settled.filter(r=>r.result==="LOSS").length;
+  const counted=wins+losses;
+
+  $("total").textContent=settled.length;
+  $("wins").textContent=wins;
+  $("losses").textContent=losses;
+  $("accuracy").textContent=counted ?
+    (wins/counted*100).toFixed(1)+"%" : "--";
+}
+
+function showSignal(signal,reason){
+  $("signal").textContent=signal;
+  $("signal").className=signal==="BUY"?"buy":signal==="SELL"?"sell":"wait";
+  $("reason").textContent=reason;
+}
+
+async function analyze(){
+  if(busy) return;
+  busy=true;
+  $("analyze").disabled=true;
+
+  const pair=$("pair").value;
+  $("status").textContent="Loading market data...";
+
+  try{
+    const bars=await fetchBars(pair);
+    if(pair!==$("pair").value) return;
+
+    const closes=bars.map(b=>b.close);
+    const fast=ema(closes,9);
+    const slow=ema(closes,21);
+    const currentRsi=rsi(closes,14);
+    const previousRsi=rsi(closes.slice(0,-1),14);
+    const last=bars[bars.length-1];
+
+    $("price").textContent=priceFormat(last.close,pair);
+    $("ema9").textContent=priceFormat(fast,pair);
+    $("ema21").textContent=priceFormat(slow,pair);
+    $("rsi").textContent=currentRsi===null?"--":currentRsi.toFixed(2);
+    $("candle").textContent=new Date(last.time).toLocaleString();
+    $("pairLabel").textContent=pair.slice(0,3)+"/"+pair.slice(3);
+
+    settle(pair,bars);
+
+    const signal=getSignal(fast,slow,currentRsi,previousRsi,bars);
+    const otc=$("mode").value==="otc";
+    $("otcWarning").hidden=!otc;
+
+    if(otc){
+      showSignal(signal,
+        "UNVERIFIED OTC: signal is based on BiQuote data, not verified broker OTC prices.");
+    } else {
+      const reasons={
+        BUY:"Bullish conditions confirmed by EMA/RSI and candle movement.",
+        SELL:"Bearish conditions confirmed by EMA/RSI and candle movement.",
+        WAIT:"Conditions do not agree strongly enough. Waiting for confirmation."
+      };
+      showSignal(signal,reasons[signal]);
+    }
+
+    // Save only Forex-mode signals. Do not label them as verified OTC.
+    if(!otc && lastBarByPair[pair]!==last.time){
+      addRecord(pair,last,signal);
+      lastBarByPair[pair]=last.time;
+    }
+
+    updateChart(pair);
+    render();
+    $("status").textContent="Updated at "+new Date().toLocaleTimeString();
+
+  }catch(err){
+    console.error(err);
+    $("status").textContent="Data error: "+err.message;
+    showSignal("WAIT","Market data unavailable. Check connection and retry.");
+  }finally{
+    busy=false;
+    $("analyze").disabled=false;
+  }
+}
+
+$("analyze").addEventListener("click",()=>{
+  countdown=60;
+  analyze();
+});
+
+$("pair").addEventListener("change",()=>{
+  countdown=60;
+  analyze();
+});
+
+$("mode").addEventListener("change",()=>{
+  countdown=60;
+  analyze();
+});
+
+$("broker").addEventListener("change",()=>{
+  if($("broker").value==="Quotex"){
+    $("status").textContent=
+      "Reminder: BiQuote data is not verified as Quotex OTC data.";
+  }
+});
+
+$("clear").addEventListener("click",()=>{
+  if(confirm("Delete all saved history?")){
+    records=[];
+    saveRecords();
+    render();
+  }
+});
+
+setInterval(()=>{
+  countdown--;
+  if(countdown<=0){
+    countdown=60;
+    analyze();
+  }
+  $("countdown").textContent=countdown;
+},1000);
+
+render();
+analyze();
+</script>
+</body>
+</html>
