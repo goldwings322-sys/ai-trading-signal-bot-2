@@ -3,51 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Trading Signal Dashboard</title>
-
+<title>AI Trading Signals</title>
 <style>
 *{box-sizing:border-box}
-body{
-  margin:0;padding:15px;
-  background:#080e1b;color:#fff;
-  font-family:Arial,sans-serif
-}
+body{margin:0;padding:15px;background:#080e1b;color:#fff;font-family:Arial,sans-serif}
 header{text-align:center;padding:12px}
 h1{color:#42d9ff;font-size:25px}
-.card{
-  background:#131e30;
-  border:1px solid #293a55;
-  border-radius:14px;
-  padding:15px;margin:14px 0
-}
+.card{background:#131e30;border:1px solid #293a55;border-radius:14px;padding:15px;margin:14px 0}
 label{display:block;margin:12px 0 6px}
-select,button{
-  width:100%;padding:12px;
-  border-radius:8px;font-size:15px
-}
-select{
-  background:#091221;color:white;
-  border:1px solid #40516b
-}
-button{
-  background:#087dcc;color:white;
-  border:0;font-weight:bold;margin-top:15px;cursor:pointer;
-}
-.chart{
-  width:100%;height:430px;
-  overflow:hidden;border-radius:10px
-}
-.chart iframe{
-  width:100%;height:100%;border:0
-}
-#signal{
-  font-size:25px;font-weight:bold;
-  color:#ffd166;margin:12px 0
-}
-.note{font-size:13px;color:#b8c7dc;line-height:1.6}
+select,button{width:100%;padding:12px;border-radius:8px;font-size:15px}
+select{background:#091221;color:white;border:1px solid #40516b}
+button{background:#087dcc;color:white;border:0;font-weight:bold;margin-top:15px}
+.chart{width:100%;height:430px;overflow:hidden;border-radius:10px}
+.chart iframe{width:100%;height:100%;border:0}
+#signal{font-size:26px;font-weight:bold;margin:12px 0}
+.note{font-size:13px;color:#b8c7dc;line-height:1.7;overflow-wrap:anywhere}
+.good{color:#35df9a}
+.bad{color:#ff7777}
+.wait{color:#ffd166}
 </style>
 </head>
-
 <body>
 
 <header>
@@ -66,20 +41,18 @@ button{
 
 <label>Currency Pair</label>
 <select id="pair" onchange="changeChart()">
-<option value="FX:EURUSD">EUR/USD</option>
-<option value="FX:GBPUSD">GBP/USD</option>
-<option value="FX:USDJPY">USD/JPY</option>
-<option value="FX:AUDUSD">AUD/USD</option>
+<option value="EURUSD">EUR/USD</option>
+<option value="GBPUSD">GBP/USD</option>
+<option value="USDJPY">USD/JPY</option>
+<option value="AUDUSD">AUD/USD</option>
 </select>
 
 <label>Signal Duration</label>
 <select id="duration">
-<option value="5">5 seconds</option>
-<option value="10">10 seconds</option>
-<option value="15">15 seconds</option>
-<option value="30">30 seconds</option>
-<option value="60" selected>1 minute</option>
+<option value="60">1 minute</option>
 </select>
+
+<p class="note">Analysis timeframe: 1-minute candles. Signal duration does not guarantee how long a price move will continue.</p>
 </div>
 
 <div class="card">
@@ -87,23 +60,17 @@ button{
 <div class="chart">
 <iframe id="chartFrame"
 title="TradingView Market Chart"
-src="https://s.tradingview.com/widgetembed/?symbol=FX%3AEURUSD&interval=1&hidesidetoolbar=1&symboledit=1&saveimage=0&toolbarbg=0b1220&theme=dark&style=1&withdateranges=1&hideideas=1&allow_symbol_change=true"
-allowfullscreen>
+src="https://s.tradingview.com/widgetembed/?symbol=FX%3AEURUSD&interval=1&hidesidetoolbar=1&symboledit=1&saveimage=0&toolbarbg=0b1220&theme=dark&style=1&withdateranges=1&hideideas=1&allow_symbol_change=true">
 </iframe>
 </div>
-<p class="note">
-Chart data is provided by TradingView. Quotes may differ
-from your broker's prices.
-</p>
+<p class="note">TradingView chart and analysis feed may use different price sources.</p>
 </div>
 
 <div class="card">
 <h3>🧠 Signal Analysis</h3>
-<div id="signal">WAITING FOR DATA</div>
-<div id="details" class="note">
-Click 'Analyze Market' to run instant AI signal calculation.
-</div>
-<button onclick="analyze()">ANALYZE MARKET</button>
+<div id="signal" class="wait">CONNECTING...</div>
+<div id="details" class="note">Checking market data...</div>
+<button id="analyzeBtn" onclick="analyze()">ANALYZE MARKET</button>
 </div>
 
 <div class="card">
@@ -112,112 +79,201 @@ Click 'Analyze Market' to run instant AI signal calculation.
 </div>
 
 <div class="card">
+<h3>⚙️ Indicator Status</h3>
+<div id="status" class="note">Waiting for data...</div>
 <p class="note">
-Strategy: EMA 9/21 + RSI 14 engine active. 100% stable execution.
+Strategy: EMA 9/21 + RSI 14. Signals are rule-based estimates,
+not guaranteed predictions. No automatic trading is performed.
+Quotex OTC prices have not been verified against this data source.
 </p>
 </div>
 
 <script>
+const API_BASE = "https://biquote.io/api/";
+let lastBars = [];
+let lastAnalysisTime = "";
+let requestBusy = false;
+
+const $ = id => document.getElementById(id);
+
 function changeChart(){
-  const pair = document.getElementById('pair').value;
-  const frame = document.getElementById('chartFrame');
-  frame.src =
-  'https://s.tradingview.com/widgetembed/?symbol='+
-  encodeURIComponent(pair)+
-  '&interval=1&hidesidetoolbar=1&symboledit=1'+
-  '&saveimage=0&toolbarbg=0b1220&theme=dark'+
-  '&style=1&withdateranges=1&hideideas=1&allow_symbol_change=true';
+  const pair = $("pair").value;
+  $("chartFrame").src =
+    "https://s.tradingview.com/widgetembed/?symbol=FX%3A" +
+    encodeURIComponent(pair) +
+    "&interval=1&hidesidetoolbar=1&symboledit=1&saveimage=0" +
+    "&toolbarbg=0b1220&theme=dark&style=1&withdateranges=1" +
+    "&hideideas=1&allow_symbol_change=true";
+  analyze();
 }
 
-function analyze(){
-  const pairElem = document.getElementById('pair');
-  const duration = document.getElementById('duration').value;
-  const broker = document.getElementById('broker').value;
-  const pairName = pairElem.options[pairElem.selectedIndex].text;
-
-  const signalBox = document.getElementById('signal');
-  const detailsBox = document.getElementById('details');
-
-  signalBox.textContent = 'ANALYZING...';
-  signalBox.style.color = '#ffd166';
-
-  // Realistic Market Price Simulation based on selected pair
-  let basePrice = pairName.includes('JPY') ? 152.50 : 1.12150;
-  let closes = [basePrice];
-  
-  for (let i = 1; i < 30; i++) {
-    let randomDelta = (Math.random() - 0.49) * 0.0005;
-    closes.push(closes[closes.length - 1] + randomDelta);
-  }
-
-  const currentPrice = closes[closes.length - 1];
-  const ema9 = calculateEMA(closes, 9);
-  const ema21 = calculateEMA(closes, 21);
-  const rsi = calculateRSI(closes, 14);
-
-  let signalText = 'WAIT';
-  let signalColor = '#ffd166';
-
-  if (ema9 > ema21 && rsi > 50 && rsi < 70) {
-    signalText = 'BUY (CALL)';
-    signalColor = '#00e676';
-  } else if (ema9 < ema21 && rsi < 50 && rsi > 30) {
-    signalText = 'SELL (PUT)';
-    signalColor = '#ff5252';
-  }
-
-  signalBox.textContent = signalText;
-  signalBox.style.color = signalColor;
-
-  detailsBox.innerHTML = `
-    <strong>Price:</strong> ${currentPrice.toFixed(5)} | 
-    <strong>EMA 9:</strong> ${ema9.toFixed(5)} | 
-    <strong>EMA 21:</strong> ${ema21.toFixed(5)} | 
-    <strong>RSI (14):</strong> ${rsi.toFixed(2)}<br>
-    Pair: ${pairName} | Broker: ${broker} | Duration: ${duration}s
-  `;
-
-  const row = document.createElement('p');
-  row.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> — [${pairName}] Signal: <span style="color:${signalColor}">${signalText}</span> (Price: ${currentPrice.toFixed(5)})`;
-  document.getElementById('history').prepend(row);
+function setSignal(title, details, cls="wait"){
+  $("signal").textContent = title;
+  $("signal").className = cls;
+  $("details").textContent = details;
 }
 
-function calculateEMA(prices, period) {
-  const k = 2 / (period + 1);
-  let ema = prices[0];
-  for (let i = 1; i < prices.length; i++) {
-    ema = (prices[i] * k) + (ema * (1 - k));
+function ema(values, period){
+  if(values.length < period) return null;
+
+  const multiplier = 2 / (period + 1);
+  let result = values.slice(0, period)
+    .reduce((sum, value) => sum + value, 0) / period;
+
+  for(let i = period; i < values.length; i++){
+    result = values[i] * multiplier + result * (1 - multiplier);
   }
-  return ema;
+  return result;
 }
 
-function calculateRSI(prices, period) {
+function rsi(values, period=14){
+  if(values.length <= period) return null;
+
   let gains = 0, losses = 0;
-  for (let i = 1; i <= period; i++) {
-    const diff = prices[i] - prices[i - 1];
-    if (diff > 0) gains += diff;
-    else losses -= diff;
+
+  for(let i = 1; i <= period; i++){
+    const change = values[i] - values[i-1];
+    if(change > 0) gains += change;
+    else losses -= change;
   }
+
   let avgGain = gains / period;
   let avgLoss = losses / period;
 
-  for (let i = period + 1; i < prices.length; i++) {
-    const diff = prices[i] - prices[i - 1];
-    if (diff > 0) {
-      avgGain = (avgGain * (period - 1) + diff) / period;
-      avgLoss = (avgLoss * (period - 1)) / period;
-    } else {
-      avgGain = (avgGain * (period - 1)) / period;
-      avgLoss = (avgLoss * (period - 1) - diff) / period;
-    }
+  for(let i = period + 1; i < values.length; i++){
+    const change = values[i] - values[i-1];
+    avgGain = (avgGain * (period - 1) + Math.max(change, 0)) / period;
+    avgLoss = (avgLoss * (period - 1) + Math.max(-change, 0)) / period;
   }
 
-  if (avgLoss === 0) return 100;
+  if(avgLoss === 0) return avgGain === 0 ? 50 : 100;
+
   const rs = avgGain / avgLoss;
   return 100 - (100 / (1 + rs));
 }
+
+async function analyze(){
+  if(requestBusy) return;
+  requestBusy = true;
+  $("analyzeBtn").disabled = true;
+  setSignal("CONNECTING...", "Fetching market candles...");
+
+  const pair = $("pair").value;
+
+  try{
+    const url = API_BASE + encodeURIComponent(pair) +
+      "/ohlc?interval=1m&limit=100";
+
+    const response = await fetch(url, {cache:"no-store"});
+
+    if(!response.ok){
+      throw new Error("Market API returned HTTP " + response.status);
+    }
+
+    const json = await response.json();
+
+    if(json.symbol !== pair || !Array.isArray(json.bars)){
+      throw new Error("Unexpected candle-data format.");
+    }
+
+    const bars = json.bars
+      .filter(b =>
+        Number.isFinite(Number(b.open)) &&
+        Number.isFinite(Number(b.high)) &&
+        Number.isFinite(Number(b.low)) &&
+        Number.isFinite(Number(b.close)) &&
+        b.openTime
+      )
+      .sort((a,b) => new Date(a.openTime) - new Date(b.openTime));
+
+    if(bars.length < 30){
+      throw new Error("Not enough valid candles for analysis.");
+    }
+
+    // Use only completed candles.
+    const now = Date.now();
+    const closedBars = bars.filter(b =>
+      b.isOpen !== true &&
+      now - new Date(b.openTime).getTime() >= 60000
+    );
+
+    if(closedBars.length < 30){
+      throw new Error("Waiting for enough completed candles.");
+    }
+
+    lastBars = closedBars;
+    const closes = closedBars.map(b => Number(b.close));
+
+    const fastEMA = ema(closes, 9);
+    const slowEMA = ema(closes, 21);
+    const currentRSI = rsi(closes, 14);
+
+    if(fastEMA === null || slowEMA === null || currentRSI === null ||
+       !Number.isFinite(fastEMA) ||
+       !Number.isFinite(slowEMA) ||
+       !Number.isFinite(currentRSI)){
+      throw new Error("Indicator calculation failed.");
+    }
+
+    let signal = "WAIT";
+    let explanation = "Indicators do not agree strongly enough.";
+
+    if(fastEMA > slowEMA && currentRSI >= 50 && currentRSI < 70){
+      signal = "BUY";
+      explanation = "EMA 9 is above EMA 21 and RSI confirms upward momentum.";
+    } else if(fastEMA < slowEMA && currentRSI < 50 && currentRSI > 30){
+      signal = "SELL";
+      explanation = "EMA 9 is below EMA 21 and RSI confirms downward momentum.";
+    }
+
+    const price = closes[closes.length - 1];
+    const lastTime = closedBars[closedBars.length - 1].openTime;
+    const timeText = new Date(lastTime).toLocaleString();
+
+    setSignal(
+      signal,
+      explanation +
+      " | Pair: " + pair +
+      " | Last closed price: " + price +
+      " | EMA 9: " + fastEMA.toFixed(5) +
+      " | EMA 21: " + slowEMA.toFixed(5) +
+      " | RSI 14: " + currentRSI.toFixed(2) +
+      " | Candle: " + timeText,
+      signal === "BUY" ? "good" :
+      signal === "SELL" ? "bad" : "wait"
+    );
+
+    $("status").textContent =
+      "Data source: BiQuote API | Valid closed candles: " +
+      closedBars.length + " | Latest candle: " + timeText +
+      " | Feed status: received. Price-source matching is not independently verified.";
+
+    if(lastTime !== lastAnalysisTime){
+      lastAnalysisTime = lastTime;
+      const row = document.createElement("p");
+      row.textContent = new Date().toLocaleTimeString() +
+        " — " + pair + ": " + signal +
+        " | RSI " + currentRSI.toFixed(1);
+      $("history").prepend(row);
+
+      while($("history").children.length > 20){
+        $("history").lastElementChild.remove();
+      }
+    }
+
+  }catch(error){
+    setSignal("WAIT — DATA ERROR", error.message, "wait");
+    $("status").textContent =
+      "Data not confirmed. Check internet, API availability, and browser CORS permissions. No signal generated.";
+  }finally{
+    requestBusy = false;
+    $("analyzeBtn").disabled = false;
+  }
+}
+
+analyze();
+setInterval(analyze, 60000);
 </script>
 
 </body>
 </html>
-
