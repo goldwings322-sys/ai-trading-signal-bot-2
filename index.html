@@ -144,10 +144,16 @@ async function analyze(){
   signalBox.style.color = '#ffd166';
 
   try {
-    // Target API URL
     const targetUrl = `https://biquote.io/api/v1/forex/candles?symbol=${rawSymbol}&interval=1m`;
-    // CORS Proxy Bypass
-    const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`);
+    
+    // Multiple Cors Proxy Fallbacks for solid reliability
+    let response;
+    try {
+      response = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`);
+    } catch (e) {
+      response = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`);
+    }
+    
     const data = await response.json();
 
     if (data && data.bars && data.bars.length > 0) {
