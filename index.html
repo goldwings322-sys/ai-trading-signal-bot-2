@@ -37,10 +37,9 @@ function getSignal(emaFast, emaSlow, rsi, bars) {
   // Downtrend with bearish candle, or rejection from overbought RSI.
   const sellTrend =
     emaFast < emaSlow &&
-    rsi > 30 &&
-    rsi < 70 &&
+    rsi > 40 &&
+    rsi < 65 &&
     bearishCandle;
-
   const previousRSI = calculateRSI(
     bars.slice(0, -1).map(bar => bar.close),
     14
