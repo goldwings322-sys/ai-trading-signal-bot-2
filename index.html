@@ -262,30 +262,60 @@ function rsi(values,period=14){
  2. Reversal signals require RSI recovery/rejection and candle confirmation.
  3. Signals use completed candles only.
 */
-function getSignal(fast,slow,rsiNow,previousRsi,bars){
-  if(fast===null || slow===null || rsiNow===null ||
-     bars.length<2) return "WAIT";
+function getSignal(fast, slow, currentRSI, previousRSI, bars) {
+  if (
+    fast === null ||
+    slow === null ||
+    currentRSI === null ||
+    !bars ||
+    bars.length < 2
+  ) {
+    return "WAIT";
+  }
 
-  const last=bars[bars.length-1];
-  const prev=bars[bars.length-2];
-  const bullish=last.close>last.open && last.close>prev.close;
-  const bearish=last.close<last.open && last.close<prev.close;
+  const last = bars[bars.length - 1];
+  const previous = bars[bars.length - 2];
 
-  const buyTrend=fast>slow && rsiNow>35 && rsiNow<70 && bullish;
-  const sellTrend=fast<slow && rsiNow>30 && rsiNow<65 && bearish;
+  const bullishCandle =
+    last.close > last.open &&
+    last.close > previous.close;
 
-  const buyRecovery=
-    rsiNow>20 && rsiNow<35 &&
-    previousRsi!==null && rsiNow>previousRsi && bullish;
+  const bearishCandle =
+    last.close < last.open &&
+    last.close < previous.close;
 
-  const sellReversal=
-    rsiNow>65 && rsiNow<80 &&
-    previousRsi!==null && rsiNow<previousRsi && bearish;
+  // BUY: bullish trend and confirmation
+  const buy =
+    fast > slow &&
+    currentRSI >= 50 &&
+    currentRSI <= 70 &&
+    bullishCandle;
 
-  if(buyRecovery) return "BUY";
-  if(sellReversal) return "SELL";
-  if(buyTrend) return "BUY";
-  if(sellTrend) return "SELL";
+  // SELL: bearish trend and confirmation
+  const sell =
+    fast < slow &&
+    currentRSI >= 30 &&
+    currentRSI < 50 &&
+    bearishCandle;
+
+  // Oversold recovery BUY
+  const recoveryBuy =
+    currentRSI > 20 &&
+    currentRSI < 35 &&
+    previousRSI !== null &&
+    currentRSI > previousRSI &&
+    bullishCandle;
+
+  // Overbought reversal SELL
+  const reversalSell =
+    currentRSI > 65 &&
+    currentRSI < 80 &&
+    previousRSI !== null &&
+    currentRSI < previousRSI &&
+    bearishCandle;
+
+  if (buy || recoveryBuy) return "BUY";
+  if (sell || reversalSell) return "SELL";
 
   return "WAIT";
 }
