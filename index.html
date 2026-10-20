@@ -5,330 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Intraday Signal Dashboard</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#0b1120;color:#e5e7eb;font-family:Arial,sans-serif}
-main{max-width:850px;margin:auto;padding:15px}
-h1{text-align:center;color:#38bdf8}
-h2{font-size:20px}
-p{line-height:1.5}
-.card{background:#151f32;border:1px solid #29364c;border-radius:12px;padding:15px;margin:14px 0}
-.row{display:flex;gap:10px;flex-wrap:wrap}
-.field{flex:1;min-width:145px}
-label{display:block;color:#94a3b8;margin:8px 0}
-select,button{width:100%;padding:12px;border-radius:8px;background:#0b1120;color:white;border:1px solid #37465e}
-button{background:#0284c7;border:0;margin-top:12px;font-weight:bold;cursor:pointer}
-button:disabled{opacity:.6}
-.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.stat{background:#0b1120;padding:12px;border-radius:8px;overflow-wrap:anywhere}
-.stat span{display:block;color:#94a3b8;font-size:13px}
-.stat strong{display:block;font-size:19px;margin-top:7px}
-.signal{text-align:center;background:#0b1120;border-radius:10px;padding:22px}
-.signal strong{display:block;font-size:34px}
-.buy{color:#4ade80}.sell{color:#fb7185}.neutral{color:#facc15}
-.muted{color:#94a3b8;font-size:13px}
-.warning{background:#422006;color:#fde68a;padding:12px;border-radius:8px;line-height:1.5}
-.good{background:#123126;color:#bbf7d0;padding:12px;border-radius:8px;line-height:1.5}
-.tablewrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:left;padding:9px 5px;border-bottom:1px solid #29364c}
-@media(max-width:450px){main{padding:10px}.field{min-width:125px}}
+*{box-sizing:border-box}body{margin:0;background:#0b1120;color:#e5e7eb;font-family:Arial,sans-serif}main{max-width:900px;margin:auto;padding:14px}h1{text-align:center;color:#38bdf8;font-size:26px}h2{font-size:19px}.muted{color:#94a3b8;font-size:13px;line-height:1.5}.card{background:#151f32;border:1px solid #29364c;border-radius:12px;padding:14px;margin:13px 0}.row{display:flex;gap:10px;flex-wrap:wrap}.field{flex:1;min-width:140px}label{display:block;color:#94a3b8;margin:8px 0}select,button{width:100%;padding:12px;border-radius:8px;background:#0b1120;color:white;border:1px solid #37465e}button{background:#0284c7;border:0;margin-top:10px;font-weight:bold;cursor:pointer}button:disabled{opacity:.55}.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat{background:#0b1120;padding:11px;border-radius:8px;overflow-wrap:anywhere}.stat span{display:block;color:#94a3b8;font-size:12px}.stat strong{display:block;font-size:18px;margin-top:6px}.signal{text-align:center;background:#0b1120;border-radius:10px;padding:20px}.signal strong{display:block;font-size:32px}.buy,.up{color:#4ade80}.sell,.down{color:#fb7185}.neutral{color:#facc15}.warning{background:#422006;color:#fde68a;padding:12px;border-radius:8px;line-height:1.5}.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px;min-width:500px}th,td{text-align:left;padding:8px 5px;border-bottom:1px solid #29364c}.secondary{background:#334155}.danger{background:#7f1d1d}@media(max-width:450px){main{padding:9px}.field{min-width:125px}}
 </style>
 </head>
-<body>
-<main>
+<body><main>
 <h1>⚡ AI Intraday Signal Dashboard</h1>
-<p class="muted" style="text-align:center">EMA 9/21 • RSI 14 • Candle & Momentum Analysis • Signals only</p>
-
-<div class="card">
-<h2>⚙️ Settings</h2>
-<div class="row">
-  <div class="field">
-    <label for="broker">Broker / Platform</label>
-    <select id="broker">
-      <option value="Quotex">Quotex</option>
-      <option value="Pocket Option">Pocket Option</option>
-      <option value="IQ Option">IQ Option</option>
-      <option value="Binomo">Binomo</option>
-      <option value="Other">Other</option>
-    </select>
-  </div>
-  <div class="field">
-    <label for="pair">Currency Pair</label>
-    <select id="pair">
-      <option value="EURUSD">EUR/USD</option>
-      <option value="GBPUSD">GBP/USD</option>
-      <option value="USDJPY">USD/JPY</option>
-      <option value="AUDUSD">AUD/USD</option>
-    </select>
-  </div>
-  <div class="field">
-    <label for="mode">Market Type</label>
-    <select id="mode">
-      <option value="forex">Real Forex feed (BiQuote)</option>
-      <option value="otc">OTC (not verified)</option>
-    </select>
-  </div>
-  <div class="field">
-    <label for="duration">Signal duration / expiry</label>
-    <select id="duration">
-      <option value="5">5 seconds</option>
-      <option value="10">10 seconds</option>
-      <option value="15">15 seconds</option>
-      <option value="30">30 seconds</option>
-      <option value="45">45 seconds</option>
-      <option value="60" selected>1 minute</option>
-    </select>
-  </div>
-</div>
-<button id="analyze">🔄 Analyze Market Now</button>
-<p class="muted">Next refresh: <strong id="countdown">60</strong> seconds</p>
-<p id="status" class="muted">Connecting to market data...</p>
-</div>
-
-<div id="otcWarning" class="warning" hidden>
-⚠️ OTC is not verified. This dashboard uses the BiQuote feed, not a confirmed live feed from your selected broker's OTC market.
-</div>
-
-<div class="card">
-<h2>📡 Current Signal</h2>
-<div class="signal">
-<strong id="signal" class="neutral">LOADING</strong>
-<p id="reason">Fetching candles and calculating indicators...</p>
-</div>
-<div class="stats" style="margin-top:12px">
-  <div class="stat"><span>Latest closed price</span><strong id="price">--</strong></div>
-  <div class="stat"><span>EMA 9</span><strong id="ema9">--</strong></div>
-  <div class="stat"><span>EMA 21</span><strong id="ema21">--</strong></div>
-  <div class="stat"><span>RSI 14</span><strong id="rsi">--</strong></div>
-  <div class="stat"><span>Recent support</span><strong id="support">--</strong></div>
-  <div class="stat"><span>Recent resistance</span><strong id="resistance">--</strong></div>
-  <div class="stat"><span>Momentum</span><strong id="momentum">--</strong></div>
-  <div class="stat"><span>Selected expiry</span><strong id="expiryLabel">1 minute</strong></div>
-</div>
-<p id="strength" class="muted">Analysis strength: --</p>
-</div>
-
-<div class="card">
-<h2>🧾 Signal History</h2>
-<div class="tablewrap">
-<table>
-<thead><tr><th>Time</th><th>Pair</th><th>Signal</th><th>Price</th><th>Strength</th><th>Expiry</th></tr></thead>
-<tbody id="history"><tr><td colspan="6">No signals yet.</td></tr></tbody>
-</table>
-</div>
-<button id="clear" style="background:#7f1d1d">Clear History</button>
-<p class="muted">History is stored locally in this browser on this device. It is not a record of actual broker trades.</p>
-</div>
-
-<div class="warning">
-<strong>Important limitations:</strong> The current data source supplies 1-minute candles. Choosing 5–45 seconds changes the requested signal/expiry label but does not create real 5-second data. For those durations, signals are based on 1-minute candles and are not validated for that expiry. Broker selection does not connect to the broker's private price feed. OTC prices are unverified. BUY/SELL is always displayed when valid data is available, but low-strength signals can be unreliable. No profit or accuracy is guaranteed. Educational use only; no automatic trading.
-</div>
+<p class="muted" style="text-align:center">EMA 9/21 • RSI 14 • Candle Momentum • Prediction Tracker • Backtest</p>
+<div class="card"><h2>⚙️ Settings</h2><div class="row">
+<div class="field"><label for="pair">Currency pair</label><select id="pair"><option value="EURUSD">EUR/USD</option><option value="GBPUSD">GBP/USD</option><option value="USDJPY">USD/JPY</option><option value="AUDUSD">AUD/USD</option></select></div>
+<div class="field"><label for="expiry">Prediction horizon</label><select id="expiry"><option value="1">Next 1-minute candle</option></select></div>
+<div class="field"><label for="threshold">Signal threshold</label><select id="threshold"><option value="2">Normal (score ≥ 2)</option><option value="3">Strict (score ≥ 3)</option><option value="1">More signals (score ≥ 1)</option></select></div>
+</div><button id="analyze">🔄 Analyze Market Now</button><p class="muted">Auto refresh in <strong id="countdown">60</strong> seconds</p><p id="status" class="muted">Connecting to market data…</p></div>
+<div class="warning">Data source note: this page requests 1-minute candles from BiQuote. If the feed blocks browser requests, is unavailable, or returns a different format, the dashboard will show an error. This is not your broker's private feed. OTC prices are not verified.</div>
+<div class="card"><h2>📡 Current Signal</h2><div class="signal"><strong id="signal" class="neutral">LOADING</strong><p id="reason">Fetching candle data…</p></div><div class="stats" style="margin-top:12px">
+<div class="stat"><span>Latest closed price</span><strong id="price">--</strong></div><div class="stat"><span>EMA 9</span><strong id="ema9">--</strong></div><div class="stat"><span>EMA 21</span><strong id="ema21">--</strong></div><div class="stat"><span>RSI 14</span><strong id="rsi">--</strong></div><div class="stat"><span>Recent support</span><strong id="support">--</strong></div><div class="stat"><span>Recent resistance</span><strong id="resistance">--</strong></div><div class="stat"><span>Momentum</span><strong id="momentum">--</strong></div><div class="stat"><span>Signal strength</span><strong id="strength">--</strong></div></div><p class="muted">Strength is a rule-based score, not a probability of winning.</p></div>
+<div class="card"><h2>🎯 Prediction Accuracy</h2><div class="stats"><div class="stat"><span>Resolved predictions</span><strong id="resolved">0</strong></div><div class="stat"><span>Correct</span><strong id="correct">0</strong></div><div class="stat"><span>Incorrect</span><strong id="incorrect">0</strong></div><div class="stat"><span>Actual accuracy</span><strong id="accuracy">--</strong></div></div><p class="muted">A prediction is resolved only after a later, closed 1-minute candle is available. Accuracy is based only on saved predictions in this browser, not a guarantee of future performance.</p><button id="reset" class="danger">Reset prediction records</button></div>
+<div class="card"><h2>🧪 Historical Backtest</h2><p class="muted">Runs the same rule-based signal over the candles currently fetched. Uses next candle direction. This simple backtest does not include execution slippage, broker payout, or guaranteed real-world fills.</p><button id="backtest" class="secondary">Run backtest on fetched candles</button><div class="stats" style="margin-top:10px"><div class="stat"><span>Tested signals</span><strong id="btCount">--</strong></div><div class="stat"><span>Correct</span><strong id="btCorrect">--</strong></div><div class="stat"><span>Backtest accuracy</span><strong id="btAccuracy">--</strong></div></div><p id="btStatus" class="muted">Analyze market first to fetch data.</p></div>
+<div class="card"><h2>🧾 Prediction History</h2><div class="tablewrap"><table><thead><tr><th>Created</th><th>Pair</th><th>Signal</th><th>Entry</th><th>Result</th><th>Strength</th></tr></thead><tbody id="history"><tr><td colspan="6">No predictions yet.</td></tr></tbody></table></div><button id="clearHistory" class="secondary">Clear visible history</button></div>
+<div class="warning"><strong>Risk note:</strong> Signals are educational indicators, not financial advice. Short-term price direction is noisy. A backtest result can differ from live trading, and no profit or accuracy is guaranteed. No automatic trades are placed.</div>
 </main>
-
 <script>
 "use strict";
-const $ = id => document.getElementById(id);
-const STORAGE = "ai_intraday_signal_history_v4";
-let records = loadRecords();
-let busy = false;
-let countdown = 60;
-
-function loadRecords(){
-  try {
-    const x = JSON.parse(localStorage.getItem(STORAGE) || "[]");
-    return Array.isArray(x) ? x : [];
-  } catch(e) { return []; }
-}
-function saveRecords(){
-  records = records.slice(0,100);
-  try { localStorage.setItem(STORAGE,JSON.stringify(records)); }
-  catch(e) { console.warn("History could not be saved",e); }
-}
-function priceFormat(n,pair){
-  if(!Number.isFinite(n)) return "--";
-  return n.toFixed(pair.endsWith("JPY") ? 3 : 5);
-}
-function getTime(bar){
-  let t = bar.openTime ?? bar.open_time ?? bar.timestamp ?? bar.time ?? bar.t ?? bar.date;
-  if(t === undefined || t === null) return null;
-  if(typeof t === "number" || /^\d+$/.test(String(t))){
-    t = Number(t);
-    if(t < 1e12) t *= 1000;
-  } else t = Date.parse(t);
-  return Number.isFinite(t) ? t : null;
-}
-function parseBars(json){
-  let a = Array.isArray(json) ? json : json.bars || json.data || json.candles || json.ohlc || [];
-  if(!Array.isArray(a)) return [];
-  return a.map(b => ({
-    time:getTime(b),
-    open:Number(b.open ?? b.o), high:Number(b.high ?? b.h),
-    low:Number(b.low ?? b.l), close:Number(b.close ?? b.c),
-    isOpen:b.isOpen === true || b.is_open === true
-  })).filter(b => b.time !== null && Number.isFinite(b.open) &&
-    Number.isFinite(b.high) && Number.isFinite(b.low) && Number.isFinite(b.close))
-    .sort((a,b)=>a.time-b.time);
-}
-async function fetchBars(pair){
-  const url = "https://biquote.io/api/" + encodeURIComponent(pair) + "/ohlc?interval=1m&limit=100";
-  const response = await fetch(url,{cache:"no-store"});
-  if(!response.ok) throw Error("API HTTP error: "+response.status);
-  const json = await response.json();
-  const all = parseBars(json);
-  const bars = all.filter(b=>!b.isOpen);
-  if(bars.length < 30) throw Error("Not enough completed 1-minute candles.");
-  return bars;
-}
-function ema(values,period){
-  if(values.length < period) return null;
-  const k=2/(period+1);
-  let v=values.slice(0,period).reduce((a,b)=>a+b,0)/period;
-  for(let i=period;i<values.length;i++) v=values[i]*k+v*(1-k);
-  return v;
-}
-function rsi(values,period=14){
-  if(values.length<=period) return null;
-  let gain=0,loss=0;
-  for(let i=1;i<=period;i++){
-    const d=values[i]-values[i-1];
-    if(d>0) gain+=d; else loss-=d;
-  }
-  gain/=period; loss/=period;
-  for(let i=period+1;i<values.length;i++){
-    const d=values[i]-values[i-1];
-    gain=(gain*(period-1)+Math.max(d,0))/period;
-    loss=(loss*(period-1)+Math.max(-d,0))/period;
-  }
-  if(gain===0 && loss===0) return 50;
-  if(loss===0) return 100;
-  if(gain===0) return 0;
-  return 100-100/(1+gain/loss);
-}
-function analyzeMarket(fast,slow,currentRSI,previousRSI,bars){
-  const last=bars[bars.length-1], prev=bars[bars.length-2];
-  const closes=bars.map(b=>b.close);
-  const recent=bars.slice(-20);
-  const support=Math.min(...recent.map(b=>b.low));
-  const resistance=Math.max(...recent.map(b=>b.high));
-  const momentum=last.close-prev.close;
-  const candleRange=Math.max(last.high-last.low,1e-10);
-  const bodyRatio=Math.abs(last.close-last.open)/candleRange;
-  const bullish=last.close>last.open && last.close>prev.close;
-  const bearish=last.close<last.open && last.close<prev.close;
-
-  // Weighted directional score. This selects a direction only after valid data
-  // is available; the strength number is a heuristic, not a probability.
-  let score=0;
-  if(fast>slow) score+=2; else if(fast<slow) score-=2;
-  if(currentRSI>=52 && currentRSI<=70) score+=1;
-  else if(currentRSI>=30 && currentRSI<=48) score-=1;
-  if(currentRSI<25 && previousRSI!==null && currentRSI>previousRSI) score+=1;
-  if(currentRSI>75 && previousRSI!==null && currentRSI<previousRSI) score-=1;
-  if(bullish) score+=1; else if(bearish) score-=1;
-  if(momentum>0) score+=0.5; else if(momentum<0) score-=0.5;
-
-  // Near resistance can reduce bullish conviction; near support can reduce bearish conviction.
-  const supportDistance=(last.close-support)/Math.max(last.close,1e-10);
-  const resistanceDistance=(resistance-last.close)/Math.max(last.close,1e-10);
-  if(score>0 && resistanceDistance<0.00015) score-=0.5;
-  if(score<0 && supportDistance<0.00015) score+=0.5;
-
-  const signal=score>=0 ? "BUY" : "SELL";
-  const strength=Math.min(95,Math.round(50+Math.abs(score)*7+bodyRatio*8));
-  const factors=[];
-  factors.push(fast>slow?"EMA trend bullish":fast<slow?"EMA trend bearish":"EMAs nearly equal");
-  factors.push("RSI "+currentRSI.toFixed(1));
-  factors.push(bullish?"last candle bullish":bearish?"last candle bearish":"last candle mixed");
-  factors.push(momentum>0?"short momentum positive":momentum<0?"short momentum negative":"short momentum flat");
-  return {signal,strength,score,support,resistance,momentum,factors};
-}
-function safe(s){
-  return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-}
-function render(){
-  const body=$("history");
-  body.innerHTML=records.length ? records.slice(0,30).map(r=>`
-    <tr><td>${safe(new Date(r.time).toLocaleTimeString())}</td>
-    <td>${safe(r.pair)}</td>
-    <td class="${r.signal==="BUY"?"buy":"sell"}">${safe(r.signal)}</td>
-    <td>${priceFormat(Number(r.price),r.pair)}</td>
-    <td>${safe(r.strength)} / 100</td><td>${safe(r.expiryLabel)}</td></tr>`).join("")
-    : '<tr><td colspan="6">No signals yet.</td></tr>';
-}
-function addRecord(pair,bar,result,expiryLabel){
-  const id=pair+"_"+bar.time+"_"+expiryLabel;
-  if(records.some(r=>r.id===id)) return;
-  records.unshift({id,pair,time:bar.time,signal:result.signal,price:bar.close,
-    strength:result.strength,expiryLabel});
-  saveRecords(); render();
-}
-function setDataError(message){
-  $("signal").textContent="DATA ERROR";
-  $("signal").className="neutral";
-  $("reason").textContent=message;
-  $("strength").textContent="No signal generated because valid data is unavailable.";
-}
-async function analyze(){
-  if(busy) return;
-  busy=true; $("analyze").disabled=true;
-  const pair=$("pair").value;
-  const expiry=Number($("duration").value);
-  const expiryLabel=expiry===60?"1 minute":expiry+" seconds";
-  $("expiryLabel").textContent=expiryLabel;
-  $("status").textContent="Loading and analyzing completed 1-minute candles...";
-  $("otcWarning").hidden=$("mode").value!=="otc";
-  try{
-    const bars=await fetchBars(pair);
-    if(pair!==$("pair").value) return;
-    const closes=bars.map(b=>b.close);
-    const fast=ema(closes,9), slow=ema(closes,21);
-    const currentRsi=rsi(closes,14), previousRsi=rsi(closes.slice(0,-1),14);
-    if(fast===null || slow===null || currentRsi===null) throw Error("Indicators could not be calculated.");
-    const last=bars[bars.length-1];
-    const result=analyzeMarket(fast,slow,currentRsi,previousRsi,bars);
-
-    $("price").textContent=priceFormat(last.close,pair);
-    $("ema9").textContent=priceFormat(fast,pair);
-    $("ema21").textContent=priceFormat(slow,pair);
-    $("rsi").textContent=currentRsi.toFixed(2);
-    $("support").textContent=priceFormat(result.support,pair);
-    $("resistance").textContent=priceFormat(result.resistance,pair);
-    $("momentum").textContent=(result.momentum>0?"+":"")+priceFormat(result.momentum,pair);
-    $("signal").textContent=result.signal;
-    $("signal").className=result.signal==="BUY"?"buy":"sell";
-    const marketWarning=$("mode").value==="otc" ?
-      " OTC feed is not verified." : "";
-    $("reason").textContent=result.factors.join(" • ")+marketWarning;
-    $("strength").textContent="Analysis strength: "+result.strength+"/100 (heuristic score, not a win probability).";
-    addRecord(pair,last,result,expiryLabel);
-    const shortExpiry=expiry<60;
-    $("status").textContent="Updated "+new Date().toLocaleTimeString()+
-      (shortExpiry?" • Warning: data is 1-minute candles, not "+expiry+"-second candles.":" • Source: BiQuote 1-minute candles.");
-  }catch(err){
-    console.error(err);
-    $("status").textContent="Data error: "+err.message;
-    setDataError("Market data is unavailable or incomplete. Retry when the feed works.");
-  }finally{
-    busy=false; $("analyze").disabled=false;
-  }
-}
-$("analyze").addEventListener("click",()=>{countdown=60;analyze();});
-$("pair").addEventListener("change",()=>{countdown=60;analyze();});
-$("mode").addEventListener("change",()=>{countdown=60;analyze();});
-$("duration").addEventListener("change",()=>{countdown=60;$("expiryLabel").textContent=Number($("duration").value)===60?"1 minute":$("duration").value+" seconds";analyze();});
-$("broker").addEventListener("change",()=>{
-  $("status").textContent="Selected platform: "+$("broker").value+". Selection does not connect its private live feed.";
-});
-$("clear").addEventListener("click",()=>{
-  if(confirm("Delete all saved signal history?")){records=[];saveRecords();render();}
-});
-setInterval(()=>{
-  countdown--;
-  if(countdown<=0){countdown=60;analyze();}
-  $("countdown").textContent=countdown;
-},1000);
-render();
-analyze();
-</script>
-</body>
-</html>
+const $=id=>document.getElementById(id);
+const STORE="ai_intraday_predictions_v1";
+let records=loadRecords(), barsCache=[], busy=false, countdown=60;
+function loadRecords(){try{let x=JSON.parse(localStorage.getItem(STORE)||"[]");return Array.isArray(x)?x:[]}catch(e){return[]}}
+function save(){records=records.slice(0,500);try{localStorage.setItem(STORE,JSON.stringify(records))}catch(e){}}
+function fmt(n,pair){return Number.isFinite(n)?n.toFixed(pair.endsWith("JPY")?3:5):"--"}
+function barTime(b){let t=b.openTime??b.open_time??b.timestamp??b.time??b.t??b.date;if(t==null)return null;if(typeof t==="number"||/^\d+$/.test(String(t))){t=Number(t);if(t<1e12)t*=1000}else t=Date.parse(t);return Number.isFinite(t)?t:null}
+function parseBars(j){let a=Array.isArray(j)?j:j.bars||j.data||j.candles||j.ohlc||[];if(!Array.isArray(a))return[];return a.map(b=>({time:barTime(b),open:Number(b.open??b.o),high:Number(b.high??b.h),low:Number(b.low??b.l),close:Number(b.close??b.c),isOpen:b.isOpen===true||b.is_open===true})).filter(b=>b.time!==null&&[b.open,b.high,b.low,b.close].every(Number.isFinite)).sort((a,b)=>a.time-b.time)}
+async function fetchBars(pair){const url="https://biquote.io/api/"+encodeURIComponent(pair)+"/ohlc?interval=1m&limit=150";const r=await fetch(url,{cache:"no-store"});if(!r.ok)throw Error("API HTTP "+r.status);const j=await r.json();const all=parseBars(j);const complete=all.filter(b=>!b.isOpen);if(complete.length<30)throw Error("Feed returned fewer than 30 completed candles or an unsupported format.");return complete}
+function ema(v,p){if(v.length<p)return null;let k=2/(p+1),x=v.slice(0,p).reduce((a,b)=>a+b,0)/p;for(let i=p;i<v.length;i++)x=v[i]*k+x*(1-k);return x}
+function rsi(v,p=14){if(v.length<=p)return null;let g=0,l=0;for(let i=1;i<=p;i++){let d=v[i]-v[i-1];if(d>0)g+=d;else l-=d}g/=p;l/=p;for(let i=p+1;i<v.length;i++){let d=v[i]-v[i-1];g=(g*(p-1)+Math.max(d,0))/p;l=(l*(p-1)+Math.max(-d,0))/p}if(g===0&&l===0)return 50;if(l===0)return 100;if(g===0)return 0;return 100-100/(1+g/l)}
+function calc(bars,i){if(i<25)return null;const close=bars.slice(0,i+1).map(b=>b.close),fast=ema(close,9),slow=ema(close,21),rv=rsi(close),prevRsi=rsi(close.slice(0,-1));if(fast==null||slow==null||rv==null)return null;const b=bars[i],prev=bars[i-1];let score=0;if(fast>slow)score+=2;else if(fast<slow)score-=2;if(rv>=52&&rv<=70)score++;else if(rv>=30&&rv<=48)score--;if(rv<25&&prevRsi!=null&&rv>prevRsi)score++;if(rv>75&&prevRsi!=null&&rv<prevRsi)score--;if(b.close>b.open&&b.close>prev.close)score++;else if(b.close<b.open&&b.close<prev.close)score--;if(b.close>prev.close)score+=.5;else if(b.close<prev.close)score-=.5;const threshold=Number($("threshold").value);let signal=score>=threshold?"UP":score<=-threshold?"DOWN":"NEUTRAL";const range=Math.max(b.high-b.low,1e-10),body=Math.abs(b.close-b.open)/range;return{signal,score,fast,slow,rsi:rv,momentum:b.close-prev.close,strength:Math.min(95,Math.round(50+Math.abs(score)*7+body*8))}}
+function resolvePredictions(pair,bars){let changed=false;for(const r of records){if(r.pair!==pair||r.result!=="PENDING")continue;const next=bars.find(b=>b.time>r.candleTime);if(!next)continue;r.result=next.close>r.entry?"UP":next.close<r.entry?"DOWN":"FLAT";r.correct=r.signal===r.result;r.resolvedAt=next.time;changed=true}if(changed)save()}
+function safe(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function render(){const body=$("history");body.innerHTML=records.slice(0,50).map(r=>`<tr><td>${safe(new Date(r.created).toLocaleTimeString())}</td><td>${safe(r.pair)}</td><td class="${r.signal==="UP"?"up":r.signal==="DOWN"?"down":"neutral"}">${safe(r.signal)}</td><td>${fmt(r.entry,r.pair)}</td><td>${r.result==="PENDING"?"Pending":safe(r.result)+(r.correct===true?" ✓":r.correct===false?" ✗":"")}</td><td>${r.strength}/100</td></tr>`).join("")||'<tr><td colspan="6">No predictions yet.</td></tr>';const resolved=records.filter(r=>r.result!=="PENDING"&&r.result!=="FLAT"),correct=resolved.filter(r=>r.correct).length;$("resolved").textContent=resolved.length;$("correct").textContent=correct;$("incorrect").textContent=resolved.length-correct;$("accuracy").textContent=resolved.length?(100*correct/resolved.length).toFixed(1)+"%":"--"}
+async function analyze(){if(busy)return;busy=true;$("analyze").disabled=true;const pair=$("pair").value;$("status").textContent="Fetching 1-minute candles…";try{const bars=await fetchBars(pair);if(pair!==$("pair").value)return;barsCache=bars;resolvePredictions(pair,bars);const i=bars.length-1,b=bars[i],x=calc(bars,i);if(!x)throw Error("Indicators unavailable.");$("price").textContent=fmt(b.close,pair);$("ema9").textContent=fmt(x.fast,pair);$("ema21").textContent=fmt(x.slow,pair);$("rsi").textContent=x.rsi.toFixed(2);$("momentum").textContent=(x.momentum>0?"+":"")+fmt(x.momentum,pair);$("support").textContent=fmt(Math.min(...bars.slice(-20).map(q=>q.low)),pair);$("resistance").textContent=fmt(Math.max(...bars.slice(-20).map(q=>q.high)),pair);$("signal").textContent=x.signal;$("signal").className=x.signal==="UP"?"up":x.signal==="DOWN"?"down":"neutral";$("strength").textContent=x.strength+"/100";$("reason").textContent="EMA "+(x.fast>x.slow?"bullish":x.fast<x.slow?"bearish":"flat")+" • RSI "+x.rsi.toFixed(1)+" • "+(x.momentum>0?"positive":x.momentum<0?"negative":"flat")+" momentum";const id=pair+"_"+b.time+"_"+x.signal;if(!records.some(r=>r.id===id)){records.unshift({id,pair,created:Date.now(),candleTime:b.time,signal:x.signal,entry:b.close,strength:x.strength,result:"PENDING",correct:null});save()}render();$("status").textContent="Updated "+new Date().toLocaleTimeString()+" • Source: BiQuote 1-minute candles."}catch(e){$("signal").textContent="DATA ERROR";$("signal").className="neutral";$("reason").textContent="Could not fetch valid market data. Check internet/feed and retry."; $("status").textContent=e.message;console.error(e)}finally{busy=false;$("analyze").disabled=false}}
+function backtest(){if(barsCache.length<40){$("btStatus").textContent="First click Analyze Market Now and wait for data.";return}let tested=0,correct=0;for(let i=25;i<barsCache.length-1;i++){const x=calc(barsCache,i);if(!x||x.signal==="NEUTRAL")continue;const a=barsCache[i].close,b=barsCache[i+1].close;const actual=b>a?"UP":b<a?"DOWN":"FLAT";tested++;if(x.signal===actual)correct++}$("btCount").textContent=tested;$("btCorrect").textContent=correct;$("btAccuracy").textContent=tested?(100*correct/tested).toFixed(1)+"%":"--";$("btStatus").textContent="Tested on "+barsCache.length+" fetched candles. Historical result only; not a forecast."}
+$("analyze").addEventListener("click",()=>{countdown=60;analyze()});$("pair").addEventListener("change",()=>{countdown=60;analyze()});$("threshold").addEventListener("change",()=>{countdown=60;analyze()});$("backtest").addEventListener("click",backtest);$("reset").addEventListener("click",()=>{if(confirm("Reset all prediction records?")){records=[];save();render()}});$("clearHistory").addEventListener("click",()=>{if(confirm("Clear visible history and saved records?")){records=[];save();render()}});setInterval(()=>{countdown--;if(countdown<=0){countdown=60;analyze()}$("countdown").textContent=countdown},1000);render();analyze();
+</script></body></html>
