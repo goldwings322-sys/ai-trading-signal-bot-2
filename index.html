@@ -432,11 +432,18 @@ else {
  document.getElementById("momentum").innerText =
    momentum.toFixed(4) + "%";
 
- document.getElementById("trend").innerText =
-   e9 > e21 ? "BULLISH" : "BEARISH";
+ const trendEl = document.getElementById("trend");
 
- document.getElementById("trend").className =
-   e9 > e21 ? "bull" : "bear";
+if (e9 > e21) {
+  trendEl.innerText = "UPWARD TREND";
+  trendEl.className = "bull";
+} else if (e9 < e21) {
+  trendEl.innerText = "DOWNWARD TREND";
+  trendEl.className = "bear";
+} else {
+  trendEl.innerText = "SIDEWAYS";
+  trendEl.className = "neutral";
+}
 
  // Display signal
  const signalEl = document.getElementById("signal");
