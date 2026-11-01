@@ -1,76 +1,151 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forex Live Analysis</title>
+<title>AI Forex Dashboard</title>
 
 <style>
 *{box-sizing:border-box}
+
 body{
- margin:0;padding:15px;
- background:#0b1120;color:#e5e7eb;
- font-family:Arial,sans-serif
+ margin:0;
+ padding:15px;
+ background:#0b1120;
+ color:#e5e7eb;
+ font-family:Arial,sans-serif;
 }
+
 .container{max-width:850px;margin:auto}
-h1{text-align:center;color:#38bdf8}
-.subtitle{text-align:center;color:#94a3b8}
+
+h1{
+ text-align:center;
+ color:#38bdf8;
+ font-size:25px;
+}
+
+.subtitle{
+ text-align:center;
+ color:#94a3b8;
+}
+
 .card{
- background:#151f32;padding:18px;
- border-radius:12px;margin:15px 0;
- border:1px solid #26354d
+ background:#151f32;
+ padding:18px;
+ border-radius:12px;
+ margin:15px 0;
+ border:1px solid #26354d;
 }
-label{display:block;margin:12px 0 7px}
-input,select,button{
- width:100%;padding:12px;border-radius:8px;
- background:#0b1120;color:white;
- border:1px solid #334155;font-size:16px
+
+label{
+ display:block;
+ margin:14px 0 7px;
+ font-weight:bold;
 }
+
+select,input,button{
+ width:100%;
+ padding:13px;
+ border-radius:8px;
+ background:#0b1120;
+ color:white;
+ border:1px solid #334155;
+ font-size:16px;
+}
+
 button{
- background:#0284c7;border:none;
- font-weight:bold;margin-top:15px;cursor:pointer
+ background:#0284c7;
+ border:none;
+ font-weight:bold;
+ margin-top:15px;
+ cursor:pointer;
 }
+
 .price{
- text-align:center;font-size:32px;
- color:#38bdf8;font-weight:bold;padding:15px
+ text-align:center;
+ font-size:32px;
+ color:#38bdf8;
+ font-weight:bold;
+ padding:15px;
 }
-.status{text-align:center;color:#94a3b8}
+
+.status{
+ text-align:center;
+ color:#94a3b8;
+ margin:10px 0;
+}
+
+.signal{
+ background:#0b1120;
+ text-align:center;
+ padding:20px;
+ border-radius:10px;
+ margin:15px 0;
+}
+
+.signal h2{
+ font-size:30px;
+ margin:10px;
+}
+
 .grid{
- display:grid;grid-template-columns:1fr 1fr;
- gap:12px;margin-top:15px
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:12px;
+ margin-top:15px;
 }
+
 .stat{
- background:#0b1120;padding:15px;
- border-radius:8px;text-align:center
+ background:#0b1120;
+ padding:15px;
+ border-radius:8px;
+ text-align:center;
 }
+
 .stat strong{
- display:block;margin-top:8px;font-size:20px;
- color:#38bdf8
+ display:block;
+ margin-top:8px;
+ font-size:20px;
+ color:#38bdf8;
 }
+
 .bull{color:#22c55e!important}
 .bear{color:#f87171!important}
 .neutral{color:#facc15!important}
+
 .warning{
- color:#fde68a;background:#422006;
- padding:12px;border-radius:8px;
- font-size:12px;line-height:1.6
+ color:#fde68a;
+ background:#422006;
+ padding:12px;
+ border-radius:8px;
+ font-size:12px;
+ line-height:1.6;
 }
-.footer{text-align:center;color:#64748b;font-size:12px}
+
+.footer{
+ text-align:center;
+ color:#64748b;
+ font-size:12px;
+ margin:20px;
+}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h1>🌐 Forex Live Analysis</h1>
-<p class="subtitle">Live Market Data • Technical Indicators</p>
+<h1>⚡ AI Forex Signal Dashboard</h1>
+<p class="subtitle">Live Forex Data & Technical Analysis</p>
 
 <div class="card">
 
-<label>API Key (Twelve Data)</label>
-<input id="apiKey" type="password"
-placeholder="Paste your API key here">
+<label>Select Broker</label>
+<select id="broker">
+<option value="Quotex">Quotex</option>
+<option value="Binomo">Binomo</option>
+<option value="Pocket Option">Pocket Option</option>
+<option value="Olymp Trade">Olymp Trade</option>
+</select>
 
 <label>Currency Pair</label>
 <select id="pair">
@@ -89,13 +164,27 @@ placeholder="Paste your API key here">
 <option value="60000">1 Minute</option>
 </select>
 
+<label>Twelve Data API Key</label>
+<input id="apiKey" type="password"
+placeholder="Enter your API key">
+
 <button onclick="start()">CONNECT LIVE DATA</button>
+
 <button onclick="stop()" style="background:#334155">
-STOP
+STOP AUTO REFRESH
 </button>
 
 <div class="price" id="price">---</div>
-<div class="status" id="status">Not connected</div>
+
+<div class="status" id="status">
+Waiting for live connection...
+</div>
+
+<div class="signal">
+<p>MARKET ANALYSIS</p>
+<h2 id="signal" class="neutral">WAITING</h2>
+<p id="reason">Connect live data to begin analysis.</p>
+</div>
 
 <div class="grid">
 
@@ -125,87 +214,34 @@ Market Trend
 </div>
 
 <div class="stat">
-Data Source
-<strong>Twelve Data</strong>
+Selected Broker
+<strong id="selectedBroker">Quotex</strong>
 </div>
 
 </div>
 </div>
 
 <div class="card">
-<h3>📈 Market Analysis</h3>
-<p id="analysis">Connect to the API to begin.</p>
+<h3>📊 Analysis Details</h3>
+<p id="details">Waiting for market data...</p>
 </div>
 
 <div class="warning">
-Educational market analysis only. Market prices may be delayed,
-API requests may be limited, and technical indicators do not
-guarantee future results. This dashboard does not execute trades.
+Educational market analysis only. Live market data may be delayed.
+Indicators cannot guarantee future price movements.
+This dashboard does not execute trades.
 </div>
 
-<p class="footer">Forex Live Analysis Dashboard</p>
+<p class="footer">
+AI Forex Dashboard • Live Data
+</p>
 
 </div>
 
 <script>
 
-let timer = null;
-let prices = [];
-
-async function fetchData(){
-
- const key = document.getElementById("apiKey").value.trim();
- const pair = document.getElementById("pair").value;
-
- if(!key){
-   document.getElementById("status").innerText =
-   "Please enter your API key.";
-   return;
- }
-
- try{
-
-  document.getElementById("status").innerText =
-  "Fetching live market data...";
-
-  const symbol = pair.replace("/", "");
-
-  const url =
-  "https://api.twelvedata.com/time_series"+
-  "?symbol="+pair+
-  "&interval=1min"+
-  "&outputsize=100"+
-  "&apikey="+encodeURIComponent(key);
-
-  const response = await fetch(url);
-  const data = await response.json();
-
-  if(data.status==="error" || !data.values){
-    throw new Error(data.message || "API error");
-  }
-
-  prices = data.values
-  .map(item=>Number(item.close))
-  .reverse();
-
-  const current = prices[prices.length-1];
-
-  document.getElementById("price").innerText =
-  current.toFixed(5);
-
-  document.getElementById("status").innerText =
-  "Connected • "+pair+" • "+new Date().toLocaleTimeString();
-
-  calculateIndicators();
-
- }catch(error){
-
-  document.getElementById("status").innerText =
-  "Error: "+error.message;
-
- }
-
-}
+let timer=null;
+let prices=[];
 
 function EMA(data,period){
 
@@ -221,34 +257,99 @@ function EMA(data,period){
 
 function RSI(data,period=14){
 
- let gain=0,loss=0;
+ let gains=0;
+ let losses=0;
 
  for(let i=data.length-period;i<data.length;i++){
 
   let diff=data[i]-data[i-1];
 
-  if(diff>=0)gain+=diff;
-  else loss+=Math.abs(diff);
+  if(diff>0)gains+=diff;
+  else losses+=Math.abs(diff);
 
  }
 
- if(loss===0)return 100;
+ if(losses===0)return 100;
 
- let rs=gain/loss;
+ let rs=gains/losses;
 
  return 100-(100/(1+rs));
 }
 
-function calculateIndicators(){
+function calculateMomentum(data){
 
- if(prices.length<22)return;
+ let current=data[data.length-1];
+ let previous=data[data.length-6];
+
+ return ((current-previous)/previous)*100;
+}
+
+async function fetchData(){
+
+ const key=document.getElementById("apiKey").value.trim();
+ const pair=document.getElementById("pair").value;
+
+ if(!key){
+  document.getElementById("status").innerText=
+  "Please enter your API key.";
+  return;
+ }
+
+ try{
+
+  document.getElementById("status").innerText=
+  "Fetching live market data...";
+
+  const url=
+  "https://api.twelvedata.com/time_series"+
+  "?symbol="+encodeURIComponent(pair)+
+  "&interval=1min"+
+  "&outputsize=100"+
+  "&apikey="+encodeURIComponent(key);
+
+  const response=await fetch(url);
+  const data=await response.json();
+
+  if(!data.values){
+   throw new Error(data.message||"Data unavailable");
+  }
+
+  prices=data.values
+  .map(x=>Number(x.close))
+  .reverse();
+
+  if(prices.length<22){
+   throw new Error("Not enough candle data");
+  }
+
+  const current=prices[prices.length-1];
+
+  document.getElementById("price").innerText=
+  current.toFixed(5);
+
+  document.getElementById("status").innerText=
+  "Connected • "+pair+" • "+
+  new Date().toLocaleTimeString();
+
+  document.getElementById("selectedBroker").innerText=
+  document.getElementById("broker").value;
+
+  calculateIndicators();
+
+ }catch(error){
+
+  document.getElementById("status").innerText=
+  "Connection error: "+error.message;
+
+ }
+}
+
+function calculateIndicators(){
 
  const e9=EMA(prices,9);
  const e21=EMA(prices,21);
- const rsi=RSI(prices);
- const momentum=
- ((prices[prices.length-1]-prices[prices.length-6])/
- prices[prices.length-6])*100;
+ const rsi=RSI(prices,14);
+ const momentum=calculateMomentum(prices);
 
  document.getElementById("ema9").innerText=e9.toFixed(5);
  document.getElementById("ema21").innerText=e21.toFixed(5);
@@ -260,23 +361,41 @@ function calculateIndicators(){
  let cls="neutral";
 
  if(e9>e21 && rsi>50 && momentum>0){
-   trend="BULLISH";
-   cls="bull";
+  trend="BULLISH";
+  cls="bull";
  }
  else if(e9<e21 && rsi<50 && momentum<0){
-   trend="BEARISH";
-   cls="bear";
+  trend="BEARISH";
+  cls="bear";
  }
 
- const element=document.getElementById("trend");
- element.innerText=trend;
- element.className=cls;
+ const trendEl=document.getElementById("trend");
+ trendEl.innerText=trend;
+ trendEl.className=cls;
 
- document.getElementById("analysis").innerText=
- "EMA crossover: "+(e9>e21?"Positive":"Negative")+
+ const signalEl=document.getElementById("signal");
+ signalEl.innerText=trend;
+ signalEl.className=cls;
+
+ let reason="Indicators are mixed; no clear trend.";
+
+ if(trend==="BULLISH"){
+  reason="EMA 9 is above EMA 21, with positive momentum.";
+ }
+
+ if(trend==="BEARISH"){
+  reason="EMA 9 is below EMA 21, with negative momentum.";
+ }
+
+ document.getElementById("reason").innerText=reason;
+
+ document.getElementById("details").innerText=
+ "Pair: "+document.getElementById("pair").value+
  " | RSI: "+rsi.toFixed(2)+
- " | Momentum: "+momentum.toFixed(4)+
- "% | Overall trend: "+trend;
+ " | Momentum: "+momentum.toFixed(4)+"%"+
+ " | Trend: "+trend+
+ " | Broker selected: "+
+ document.getElementById("broker").value;
 }
 
 function start(){
@@ -294,15 +413,15 @@ function start(){
 function stop(){
 
  if(timer){
-   clearInterval(timer);
-   timer=null;
+  clearInterval(timer);
+  timer=null;
  }
 
  document.getElementById("status").innerText=
  "Auto refresh stopped.";
-
 }
 
 </script>
 </body>
 </html>
+
