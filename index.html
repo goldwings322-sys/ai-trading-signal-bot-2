@@ -344,84 +344,120 @@ async function fetchData(){
  }
 }
 
-function calculateIndicators(){
+ function calculateIndicators(){
 
- const e9=EMA(prices,9);
- const e21=EMA(prices,21);
- const rsi=RSI(prices,14);
- const momentum=calculateMomentum(prices);
-
- document.getElementById("ema9").innerText=e9.toFixed(5);
- document.getElementById("ema21").innerText=e21.toFixed(5);
- document.getElementById("rsi").innerText=rsi.toFixed(2);
- document.getElementById("momentum").innerText=
- momentum.toFixed(4)+"%";
-
- let trend="NEUTRAL";
- let cls="neutral";
-
- if(e9>e21 && rsi>50 && momentum>0){
-  trend="BULLISH";
-  cls="bull";
- }
- else if(e9<e21 && rsi<50 && momentum<0){
-  trend="BEARISH";
-  cls="bear";
+ if(prices.length < 22){
+   document.getElementById("status").innerText =
+   "Waiting for sufficient market data...";
+   return;
  }
 
- const trendEl=document.getElementById("trend");
- trendEl.innerText=trend;
- trendEl.className=cls;
+ const e9 = EMA(prices, 9);
+ const e21 = EMA(prices, 21);
+ const rsi = RSI(prices, 14);
+ const momentum = calculateMomentum(prices);
 
- const signalEl=document.getElementById("signal");
- signalEl.innerText=trend;
- signalEl.className=cls;
+ const previousE9 = EMA(prices.slice(0,-1), 9);
+ const previousE21 = EMA(prices.slice(0,-1), 21);
 
- let reason="Indicators are mixed; no clear trend.";
+ let score = 0;
 
- if(trend==="BULLISH"){
-  reason="EMA 9 is above EMA 21, with positive momentum.";
+ // EMA trend
+ if(e9 > e21) score += 1;
+ else if(e9 < e21) score -= 1;
+
+ // RSI analysis
+ if(rsi > 50) score += 1;
+ else if(rsi < 50) score -= 1;
+
+ // Momentum
+ if(momentum > 0) score += 1;
+ else if(momentum < 0) score -= 1;
+
+ // Crossover confirmation
+ if(previousE9 <= previousE21 && e9 > e21)
+   score += 1;
+
+ if(previousE9 >= previousE21 && e9 < e21)
+   score -= 1;
+
+ // Directional bias
+ let signal = "WEAK BUY";
+ let cls = "neutral";
+
+ if(score >= 2){
+   signal = "BUY";
+   cls = "bull";
+ }
+ else if(score <= -2){
+   signal = "SELL";
+   cls = "bear";
+ }
+ else if(score > 0){
+   signal = "WEAK BUY";
+   cls = "bull";
+ }
+ else if(score < 0){
+   signal = "WEAK SELL";
+   cls = "bear";
+ }
+ else {
+   // Tie-breaker: latest price direction
+   const last = prices[prices.length-1];
+   const prev = prices[prices.length-2];
+
+   if(last >= prev){
+     signal = "WEAK BUY";
+     cls = "bull";
+   } else {
+     signal = "WEAK SELL";
+     cls = "bear";
+   }
  }
 
- if(trend==="BEARISH"){
-  reason="EMA 9 is below EMA 21, with negative momentum.";
- }
+ // Agreement score (not win probability)
+ const confidence = Math.round(
+   Math.abs(score) / 4 * 100
+ );
 
- document.getElementById("reason").innerText=reason;
+ document.getElementById("ema9").innerText =
+   e9.toFixed(5);
 
- document.getElementById("details").innerText=
- "Pair: "+document.getElementById("pair").value+
- " | RSI: "+rsi.toFixed(2)+
- " | Momentum: "+momentum.toFixed(4)+"%"+
- " | Trend: "+trend+
- " | Broker selected: "+
- document.getElementById("broker").value;
+ document.getElementById("ema21").innerText =
+   e21.toFixed(5);
+
+ document.getElementById("rsi").innerText =
+   rsi.toFixed(2);
+
+ document.getElementById("momentum").innerText =
+   momentum.toFixed(4) + "%";
+
+ document.getElementById("trend").innerText =
+   e9 > e21 ? "BULLISH" : "BEARISH";
+
+ document.getElementById("trend").className =
+   e9 > e21 ? "bull" : "bear";
+
+ // Display signal
+ const signalEl = document.getElementById("signal");
+
+ signalEl.innerText = signal;
+ signalEl.className = cls;
+
+ // Confidence
+ document.getElementById("reason").innerText =
+   "Indicator agreement: " + confidence +
+   "% | RSI: " + rsi.toFixed(2) +
+   " | EMA: " + (e9 > e21 ? "Bullish" : "Bearish") +
+   " | Momentum: " + momentum.toFixed(4) + "%";
+
+ document.getElementById("details").innerText =
+   "Pair: " + document.getElementById("pair").value +
+   " | Broker: " + document.getElementById("broker").value +
+   " | Analysis: " + signal +
+   " | Score: " + score + "/4" +
+   " | RSI: " + rsi.toFixed(2);
 }
 
-function start(){
 
- stop();
- fetchData();
-
- const interval=
- Number(document.getElementById("refresh").value);
-
- timer=setInterval(fetchData,interval);
-
-}
-
-function stop(){
-
- if(timer){
-  clearInterval(timer);
-  timer=null;
- }
-
- document.getElementById("status").innerText=
- "Auto refresh stopped.";
-}
-
-</script>
-</body>
-</html>
-
+ 
