@@ -1,56 +1,308 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Intraday Signal Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forex Live Analysis</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;background:#0b1120;color:#e5e7eb;font-family:Arial,sans-serif}main{max-width:900px;margin:auto;padding:14px}h1{text-align:center;color:#38bdf8;font-size:26px}h2{font-size:19px}.muted{color:#94a3b8;font-size:13px;line-height:1.5}.card{background:#151f32;border:1px solid #29364c;border-radius:12px;padding:14px;margin:13px 0}.row{display:flex;gap:10px;flex-wrap:wrap}.field{flex:1;min-width:140px}label{display:block;color:#94a3b8;margin:8px 0}select,button{width:100%;padding:12px;border-radius:8px;background:#0b1120;color:white;border:1px solid #37465e}button{background:#0284c7;border:0;margin-top:10px;font-weight:bold;cursor:pointer}button:disabled{opacity:.55}.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat{background:#0b1120;padding:11px;border-radius:8px;overflow-wrap:anywhere}.stat span{display:block;color:#94a3b8;font-size:12px}.stat strong{display:block;font-size:18px;margin-top:6px}.signal{text-align:center;background:#0b1120;border-radius:10px;padding:20px}.signal strong{display:block;font-size:32px}.buy,.up{color:#4ade80}.sell,.down{color:#fb7185}.neutral{color:#facc15}.warning{background:#422006;color:#fde68a;padding:12px;border-radius:8px;line-height:1.5}.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px;min-width:500px}th,td{text-align:left;padding:8px 5px;border-bottom:1px solid #29364c}.secondary{background:#334155}.danger{background:#7f1d1d}@media(max-width:450px){main{padding:9px}.field{min-width:125px}}
+*{box-sizing:border-box}
+body{
+ margin:0;padding:15px;
+ background:#0b1120;color:#e5e7eb;
+ font-family:Arial,sans-serif
+}
+.container{max-width:850px;margin:auto}
+h1{text-align:center;color:#38bdf8}
+.subtitle{text-align:center;color:#94a3b8}
+.card{
+ background:#151f32;padding:18px;
+ border-radius:12px;margin:15px 0;
+ border:1px solid #26354d
+}
+label{display:block;margin:12px 0 7px}
+input,select,button{
+ width:100%;padding:12px;border-radius:8px;
+ background:#0b1120;color:white;
+ border:1px solid #334155;font-size:16px
+}
+button{
+ background:#0284c7;border:none;
+ font-weight:bold;margin-top:15px;cursor:pointer
+}
+.price{
+ text-align:center;font-size:32px;
+ color:#38bdf8;font-weight:bold;padding:15px
+}
+.status{text-align:center;color:#94a3b8}
+.grid{
+ display:grid;grid-template-columns:1fr 1fr;
+ gap:12px;margin-top:15px
+}
+.stat{
+ background:#0b1120;padding:15px;
+ border-radius:8px;text-align:center
+}
+.stat strong{
+ display:block;margin-top:8px;font-size:20px;
+ color:#38bdf8
+}
+.bull{color:#22c55e!important}
+.bear{color:#f87171!important}
+.neutral{color:#facc15!important}
+.warning{
+ color:#fde68a;background:#422006;
+ padding:12px;border-radius:8px;
+ font-size:12px;line-height:1.6
+}
+.footer{text-align:center;color:#64748b;font-size:12px}
 </style>
 </head>
-<body><main>
-<h1>⚡ AI Intraday Signal Dashboard</h1>
-<p class="muted" style="text-align:center">EMA 9/21 • RSI 14 • Candle Momentum • Prediction Tracker • Backtest</p>
-<div class="card"><h2>⚙️ Settings</h2><div class="row">
-<div class="field"><label for="broker">Broker (display selection only)</label><select id="broker"><option value="Quotex">Quotex</option><option value="Pocket Option">Pocket Option</option><option value="Binomo">Binomo</option></select></div>
-<div class="field"><label for="pair">Currency pair</label><select id="pair"><option value="EURUSD">EUR/USD</option><option value="GBPUSD">GBP/USD</option><option value="USDJPY">USD/JPY</option><option value="AUDUSD">AUD/USD</option></select></div>
-<div class="field"><label for="expiry">Prediction horizon</label><select id="expiry"><option value="1">Next 1-minute candle</option></select></div>
-<div class="field"><label for="threshold">Signal threshold</label><select id="threshold"><option value="2">Normal (score ≥ 2)</option><option value="3">Strict (score ≥ 3)</option><option value="1">More signals (score ≥ 1)</option></select></div>
-</div><button id="analyze">🔄 Analyze Market Now</button><p class="muted">Auto refresh in <strong id="countdown">60</strong> seconds</p><p id="status" class="muted">Connecting to market data…</p></div>
-<div class="warning">Data source note: this page requests 1-minute candles from BiQuote. If the feed blocks browser requests, is unavailable, or returns a different format, the dashboard will show an error. This is not your broker's private feed. OTC prices are not verified.</div>
-<div class="card"><h2>📡 Current Signal</h2><div class="signal"><strong id="signal" class="neutral">LOADING</strong><p id="reason">Fetching candle data…</p></div><div class="stats" style="margin-top:12px">
-<div class="stat"><span>Latest closed price</span><strong id="price">--</strong></div><div class="stat"><span>EMA 9</span><strong id="ema9">--</strong></div><div class="stat"><span>EMA 21</span><strong id="ema21">--</strong></div><div class="stat"><span>RSI 14</span><strong id="rsi">--</strong></div><div class="stat"><span>Recent support</span><strong id="support">--</strong></div><div class="stat"><span>Recent resistance</span><strong id="resistance">--</strong></div><div class="stat"><span>Momentum</span><strong id="momentum">--</strong></div><div class="stat"><span>Signal strength</span><strong id="strength">--</strong></div></div><p class="muted">Strength is a rule-based score, not a probability of winning.</p></div>
-<div class="card"><h2>🎯 Prediction Accuracy</h2><div class="stats"><div class="stat"><span>Resolved predictions</span><strong id="resolved">0</strong></div><div class="stat"><span>Correct</span><strong id="correct">0</strong></div><div class="stat"><span>Incorrect</span><strong id="incorrect">0</strong></div><div class="stat"><span>Actual accuracy</span><strong id="accuracy">--</strong></div></div><p class="muted">A prediction is resolved only after a later, closed 1-minute candle is available. Accuracy is based only on saved predictions in this browser, not a guarantee of future performance.</p><button id="reset" class="danger">Reset prediction records</button></div>
-<div class="card"><h2>🧪 Historical Backtest</h2><p class="muted">Runs the same rule-based signal over the candles currently fetched. Uses next candle direction. This simple backtest does not include execution slippage, broker payout, or guaranteed real-world fills.</p><button id="backtest" class="secondary">Run backtest on fetched candles</button><div class="stats" style="margin-top:10px"><div class="stat"><span>Tested signals</span><strong id="btCount">--</strong></div><div class="stat"><span>Correct</span><strong id="btCorrect">--</strong></div><div class="stat"><span>Backtest accuracy</span><strong id="btAccuracy">--</strong></div></div><p id="btStatus" class="muted">Analyze market first to fetch data.</p></div>
-<div class="card"><h2>🧾 Prediction History</h2><div class="tablewrap"><table><thead><tr><th>Created</th><th>Pair</th><th>Signal</th><th>Entry</th><th>Result</th><th>Strength</th></tr></thead><tbody id="history"><tr><td colspan="6">No predictions yet.</td></tr></tbody></table></div><button id="clearHistory" class="secondary">Clear visible history</button></div>
-<div class="warning"><strong>Risk note:</strong> Signals are educational indicators, not financial advice. Short-term price direction is noisy. A backtest result can differ from live trading, and no profit or accuracy is guaranteed. No automatic trades are placed.</div>
-</main>
+
+<body>
+<div class="container">
+
+<h1>🌐 Forex Live Analysis</h1>
+<p class="subtitle">Live Market Data • Technical Indicators</p>
+
+<div class="card">
+
+<label>API Key (Twelve Data)</label>
+<input id="apiKey" type="password"
+placeholder="Paste your API key here">
+
+<label>Currency Pair</label>
+<select id="pair">
+<option value="EUR/USD">EUR/USD</option>
+<option value="GBP/USD">GBP/USD</option>
+<option value="USD/JPY">USD/JPY</option>
+<option value="USD/CHF">USD/CHF</option>
+</select>
+
+<label>Refresh Interval</label>
+<select id="refresh">
+<option value="5000">5 Seconds</option>
+<option value="10000">10 Seconds</option>
+<option value="15000">15 Seconds</option>
+<option value="30000">30 Seconds</option>
+<option value="60000">1 Minute</option>
+</select>
+
+<button onclick="start()">CONNECT LIVE DATA</button>
+<button onclick="stop()" style="background:#334155">
+STOP
+</button>
+
+<div class="price" id="price">---</div>
+<div class="status" id="status">Not connected</div>
+
+<div class="grid">
+
+<div class="stat">
+EMA 9
+<strong id="ema9">---</strong>
+</div>
+
+<div class="stat">
+EMA 21
+<strong id="ema21">---</strong>
+</div>
+
+<div class="stat">
+RSI 14
+<strong id="rsi">---</strong>
+</div>
+
+<div class="stat">
+Momentum
+<strong id="momentum">---</strong>
+</div>
+
+<div class="stat">
+Market Trend
+<strong id="trend">---</strong>
+</div>
+
+<div class="stat">
+Data Source
+<strong>Twelve Data</strong>
+</div>
+
+</div>
+</div>
+
+<div class="card">
+<h3>📈 Market Analysis</h3>
+<p id="analysis">Connect to the API to begin.</p>
+</div>
+
+<div class="warning">
+Educational market analysis only. Market prices may be delayed,
+API requests may be limited, and technical indicators do not
+guarantee future results. This dashboard does not execute trades.
+</div>
+
+<p class="footer">Forex Live Analysis Dashboard</p>
+
+</div>
+
 <script>
-"use strict";
-const $=id=>document.getElementById(id);
-const STORE="ai_intraday_predictions_v1";
-let records=loadRecords(), barsCache=[], busy=false, countdown=60;
-function loadRecords(){try{let x=JSON.parse(localStorage.getItem(STORE)||"[]");return Array.isArray(x)?x:[]}catch(e){return[]}}
-function save(){records=records.slice(0,500);try{localStorage.setItem(STORE,JSON.stringify(records))}catch(e){}}
-function fmt(n,pair){return Number.isFinite(n)?n.toFixed(pair.endsWith("JPY")?3:5):"--"}
-function barTime(b){let t=b.openTime??b.open_time??b.timestamp??b.time??b.t??b.date;if(t==null)return null;if(typeof t==="number"||/^\d+$/.test(String(t))){t=Number(t);if(t<1e12)t*=1000}else t=Date.parse(t);return Number.isFinite(t)?t:null}
-function parseBars(j){let a=Array.isArray(j)?j:j.bars||j.data||j.candles||j.ohlc||[];if(!Array.isArray(a))return[];return a.map(b=>({time:barTime(b),open:Number(b.open??b.o),high:Number(b.high??b.h),low:Number(b.low??b.l),close:Number(b.close??b.c),isOpen:b.isOpen===true||b.is_open===true})).filter(b=>b.time!==null&&[b.open,b.high,b.low,b.close].every(Number.isFinite)).sort((a,b)=>a.time-b.time)}
-async function fetchBars(pair){const url="https://biquote.io/api/"+encodeURIComponent(pair)+"/ohlc?interval=1m&limit=150";const r=await fetch(url,{cache:"no-store"});if(!r.ok)throw Error("API HTTP "+r.status);const j=await r.json();const all=parseBars(j);const complete=all.filter(b=>!b.isOpen);if(complete.length<30)throw Error("Feed returned fewer than 30 completed candles or an unsupported format.");return complete}
-function ema(v,p){if(v.length<p)return null;let k=2/(p+1),x=v.slice(0,p).reduce((a,b)=>a+b,0)/p;for(let i=p;i<v.length;i++)x=v[i]*k+x*(1-k);return x}
-function rsi(v,p=14){if(v.length<=p)return null;let g=0,l=0;for(let i=1;i<=p;i++){let d=v[i]-v[i-1];if(d>0)g+=d;else l-=d}g/=p;l/=p;for(let i=p+1;i<v.length;i++){let d=v[i]-v[i-1];g=(g*(p-1)+Math.max(d,0))/p;l=(l*(p-1)+Math.max(-d,0))/p}if(g===0&&l===0)return 50;if(l===0)return 100;if(g===0)return 0;return 100-100/(1+g/l)}
-function calc(bars,i){if(i<25)return null;const close=bars.slice(0,i+1).map(b=>b.close),fast=ema(close,9),slow=ema(close,21),rv=rsi(close),prevRsi=rsi(close.slice(0,-1));if(fast==null||slow==null||rv==null)return null;const b=bars[i],prev=bars[i-1];let score=0;if(fast>slow)score+=2;else if(fast<slow)score-=2;if(rv>=52&&rv<=70)score++;else if(rv>=30&&rv<=48)score--;if(rv<25&&prevRsi!=null&&rv>prevRsi)score++;if(rv>75&&prevRsi!=null&&rv<prevRsi)score--;if(b.close>b.open&&b.close>prev.close)score++;else if(b.close<b.open&&b.close<prev.close)score--;if(b.close>prev.close)score+=.5;else if(b.close<prev.close)score-=.5;const threshold=Number($("threshold").value);let signal=score>=threshold?"UP":score<=-threshold?"DOWN":"NEUTRAL";const range=Math.max(b.high-b.low,1e-10),body=Math.abs(b.close-b.open)/range;return{signal,score,fast,slow,rsi:rv,momentum:b.close-prev.close,strength:Math.min(95,Math.round(50+Math.abs(score)*7+body*8))}}
-function resolvePredictions(pair,bars){let changed=false;for(const r of records){if(r.pair!==pair||r.result!=="PENDING")continue;const next=bars.find(b=>b.time>r.candleTime);if(!next)continue;r.result=next.close>r.entry?"UP":next.close<r.entry?"DOWN":"FLAT";r.correct=r.signal===r.result;r.resolvedAt=next.time;changed=true}if(changed)save()}
-function safe(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function render(){const body=$("history");body.innerHTML=records.slice(0,50).map(r=>`<tr><td>${safe(new Date(r.created).toLocaleTimeString())}</td><td>${safe(r.pair)}</td><td class="${r.signal==="UP"?"up":r.signal==="DOWN"?"down":"neutral"}">${safe(r.signal)}</td><td>${fmt(r.entry,r.pair)}</td><td>${r.result==="PENDING"?"Pending":safe(r.result)+(r.correct===true?" ✓":r.correct===false?" ✗":"")}</td><td>${r.strength}/100</td></tr>`).join("")||'<tr><td colspan="6">No predictions yet.</td></tr>';const resolved=records.filter(r=>r.result!=="PENDING"&&r.result!=="FLAT"),correct=resolved.filter(r=>r.correct).length;$("resolved").textContent=resolved.length;$("correct").textContent=correct;$("incorrect").textContent=resolved.length-correct;$("accuracy").textContent=resolved.length?(100*correct/resolved.length).toFixed(1)+"%":"--"}
-async function analyze(){if(busy)return;busy=true;$("analyze").disabled=true;const pair=$("pair").value;$("status").textContent="Fetching 1-minute candles…";try{const bars=await fetchBars(pair);if(pair!==$("pair").value)return;barsCache=bars;resolvePredictions(pair,bars);const i=bars.length-1,b=bars[i],x=calc(bars,i);if(!x)throw Error("Indicators unavailable.");$("price").textContent=fmt(b.close,pair);$("ema9").textContent=fmt(x.fast,pair);$("ema21").textContent=fmt(x.slow,pair);$("rsi").textContent=x.rsi.toFixed(2);$("momentum").textContent=(x.momentum>0?"+":"")+fmt(x.momentum,pair);$("support").textContent=fmt(Math.min(...bars.slice(-20).map(q=>q.low)),pair);$("resistance").textContent=fmt(Math.max(...bars.slice(-20).map(q=>q.high)),pair);$("signal").textContent=x.signal;$("signal").className=x.signal==="UP"?"up":x.signal==="DOWN"?"down":"neutral";$("strength").textContent=x.strength+"/100";$("reason").textContent="EMA "+(x.fast>x.slow?"bullish":x.fast<x.slow?"bearish":"flat")+" • RSI "+x.rsi.toFixed(1)+" • "+(x.momentum>0?"positive":x.momentum<0?"negative":"flat")+" momentum";const id=pair+"_"+b.time+"_"+x.signal;if(!records.some(r=>r.id===id)){records.unshift({id,pair,created:Date.now(),candleTime:b.time,signal:x.signal,entry:b.close,strength:x.strength,result:"PENDING",correct:null});save()}render();$("status").textContent="Updated "+new Date().toLocaleTimeString()+" • Source: BiQuote 1-minute candles."}catch(e){$("signal").textContent="DATA ERROR";$("signal").className="neutral";$("reason").textContent="Could not fetch valid market data. Check internet/feed and retry."; $("status").textContent=e.message;console.error(e)}finally{busy=false;$("analyze").disabled=false}}
-function backtest(){if(barsCache.length<40){$("btStatus").textContent="First click Analyze Market Now and wait for data.";return}let tested=0,correct=0;for(let i=25;i<barsCache.length-1;i++){const x=calc(barsCache,i);if(!x||x.signal==="NEUTRAL")continue;const a=barsCache[i].close,b=barsCache[i+1].close;const actual=b>a?"UP":b<a?"DOWN":"FLAT";tested++;if(x.signal===actual)correct++}$("btCount").textContent=tested;$("btCorrect").textContent=correct;$("btAccuracy").textContent=tested?(100*correct/tested).toFixed(1)+"%":"--";$("btStatus").textContent="Tested on "+barsCache.length+" fetched candles. Historical result only; not a forecast."}
-$("analyze").addEventListener("click",()=>{countdown=60;analyze()});$("pair").addEventListener("change",()=>{countdown=60;analyze()});$("threshold").addEventListener("change",()=>{countdown=60;analyze()});$("backtest").addEventListener("click",backtest);$("reset").addEventListener("click",()=>{if(confirm("Reset all prediction records?")){records=[];save();render()}});$("clearHistory").addEventListener("click",()=>{if(confirm("Clear visible history and saved records?")){records=[];save();render()}});setInterval(()=>{countdown--;if(countdown<=0){countdown=60;analyze()}$("countdown").textContent=countdown},1000);render();analyze();
-// Broker selection is a dashboard preference only; it does not connect to a broker.
-const brokerSelect = document.getElementById('broker');
-if (brokerSelect) {
-  brokerSelect.value = localStorage.getItem('selectedBroker') || 'Quotex';
-  brokerSelect.addEventListener('change', () => {
-    localStorage.setItem('selectedBroker', brokerSelect.value);
-  });
+
+let timer = null;
+let prices = [];
+
+async function fetchData(){
+
+ const key = document.getElementById("apiKey").value.trim();
+ const pair = document.getElementById("pair").value;
+
+ if(!key){
+   document.getElementById("status").innerText =
+   "Please enter your API key.";
+   return;
+ }
+
+ try{
+
+  document.getElementById("status").innerText =
+  "Fetching live market data...";
+
+  const symbol = pair.replace("/", "");
+
+  const url =
+  "https://api.twelvedata.com/time_series"+
+  "?symbol="+pair+
+  "&interval=1min"+
+  "&outputsize=100"+
+  "&apikey="+encodeURIComponent(key);
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if(data.status==="error" || !data.values){
+    throw new Error(data.message || "API error");
+  }
+
+  prices = data.values
+  .map(item=>Number(item.close))
+  .reverse();
+
+  const current = prices[prices.length-1];
+
+  document.getElementById("price").innerText =
+  current.toFixed(5);
+
+  document.getElementById("status").innerText =
+  "Connected • "+pair+" • "+new Date().toLocaleTimeString();
+
+  calculateIndicators();
+
+ }catch(error){
+
+  document.getElementById("status").innerText =
+  "Error: "+error.message;
+
+ }
+
 }
-</script></body></html>
+
+function EMA(data,period){
+
+ let k=2/(period+1);
+ let result=data[0];
+
+ for(let i=1;i<data.length;i++){
+  result=data[i]*k+result*(1-k);
+ }
+
+ return result;
+}
+
+function RSI(data,period=14){
+
+ let gain=0,loss=0;
+
+ for(let i=data.length-period;i<data.length;i++){
+
+  let diff=data[i]-data[i-1];
+
+  if(diff>=0)gain+=diff;
+  else loss+=Math.abs(diff);
+
+ }
+
+ if(loss===0)return 100;
+
+ let rs=gain/loss;
+
+ return 100-(100/(1+rs));
+}
+
+function calculateIndicators(){
+
+ if(prices.length<22)return;
+
+ const e9=EMA(prices,9);
+ const e21=EMA(prices,21);
+ const rsi=RSI(prices);
+ const momentum=
+ ((prices[prices.length-1]-prices[prices.length-6])/
+ prices[prices.length-6])*100;
+
+ document.getElementById("ema9").innerText=e9.toFixed(5);
+ document.getElementById("ema21").innerText=e21.toFixed(5);
+ document.getElementById("rsi").innerText=rsi.toFixed(2);
+ document.getElementById("momentum").innerText=
+ momentum.toFixed(4)+"%";
+
+ let trend="NEUTRAL";
+ let cls="neutral";
+
+ if(e9>e21 && rsi>50 && momentum>0){
+   trend="BULLISH";
+   cls="bull";
+ }
+ else if(e9<e21 && rsi<50 && momentum<0){
+   trend="BEARISH";
+   cls="bear";
+ }
+
+ const element=document.getElementById("trend");
+ element.innerText=trend;
+ element.className=cls;
+
+ document.getElementById("analysis").innerText=
+ "EMA crossover: "+(e9>e21?"Positive":"Negative")+
+ " | RSI: "+rsi.toFixed(2)+
+ " | Momentum: "+momentum.toFixed(4)+
+ "% | Overall trend: "+trend;
+}
+
+function start(){
+
+ stop();
+ fetchData();
+
+ const interval=
+ Number(document.getElementById("refresh").value);
+
+ timer=setInterval(fetchData,interval);
+
+}
+
+function stop(){
+
+ if(timer){
+   clearInterval(timer);
+   timer=null;
+ }
+
+ document.getElementById("status").innerText=
+ "Auto refresh stopped.";
+
+}
+
+</script>
+</body>
+</html>
