@@ -401,19 +401,19 @@ async function fetchData(){
    signal = "WEAK SELL";
    cls = "bear";
  }
- else {
-   // Tie-breaker: latest price direction
-   const last = prices[prices.length-1];
-   const prev = prices[prices.length-2];
+ 
+else {
+   const last = prices[prices.length - 1];
+   const prev = prices[prices.length - 2];
 
-   if(last >= prev){
-     signal = "WEAK BUY";
+   if (last >= prev) {
+     signal = "BUY";
      cls = "bull";
    } else {
-     signal = "WEAK SELL";
+     signal = "SELL";
      cls = "bear";
    }
- }
+}
 
  // Agreement score (not win probability)
  const confidence = Math.round(
