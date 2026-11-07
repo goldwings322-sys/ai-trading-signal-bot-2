@@ -3,130 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Forex Dashboard</title>
+<title>AI Forex Signal Dashboard V2</title>
 
 <style>
 *{box-sizing:border-box}
 
 body{
- margin:0;
- padding:15px;
- background:#0b1120;
- color:#e5e7eb;
+ margin:0;padding:15px;
+ background:#0b1120;color:#e5e7eb;
  font-family:Arial,sans-serif;
 }
-
 .container{max-width:850px;margin:auto}
-
-h1{
- text-align:center;
- color:#38bdf8;
- font-size:25px;
-}
-
-.subtitle{
- text-align:center;
- color:#94a3b8;
-}
-
+h1{text-align:center;color:#38bdf8;font-size:25px}
+.subtitle{text-align:center;color:#94a3b8}
 .card{
- background:#151f32;
- padding:18px;
- border-radius:12px;
- margin:15px 0;
+ background:#151f32;padding:18px;
+ border-radius:12px;margin:15px 0;
  border:1px solid #26354d;
 }
-
-label{
- display:block;
- margin:14px 0 7px;
- font-weight:bold;
-}
-
+label{display:block;margin:14px 0 7px;font-weight:bold}
 select,input,button{
- width:100%;
- padding:13px;
- border-radius:8px;
- background:#0b1120;
- color:white;
- border:1px solid #334155;
- font-size:16px;
+ width:100%;padding:13px;border-radius:8px;
+ background:#0b1120;color:white;
+ border:1px solid #334155;font-size:16px;
 }
-
 button{
- background:#0284c7;
- border:none;
- font-weight:bold;
- margin-top:15px;
- cursor:pointer;
+ background:#0284c7;border:none;
+ font-weight:bold;margin-top:15px;cursor:pointer;
 }
-
 .price{
- text-align:center;
- font-size:32px;
- color:#38bdf8;
- font-weight:bold;
- padding:15px;
+ text-align:center;font-size:30px;
+ color:#38bdf8;font-weight:bold;padding:15px;
 }
-
-.status{
- text-align:center;
- color:#94a3b8;
- margin:10px 0;
-}
-
+.status{text-align:center;color:#94a3b8;margin:10px 0}
 .signal{
- background:#0b1120;
- text-align:center;
- padding:20px;
- border-radius:10px;
- margin:15px 0;
+ background:#0b1120;text-align:center;
+ padding:20px;border-radius:10px;margin:15px 0;
 }
-
-.signal h2{
- font-size:30px;
- margin:10px;
-}
-
+.signal h2{font-size:30px;margin:10px}
 .grid{
- display:grid;
- grid-template-columns:1fr 1fr;
- gap:12px;
- margin-top:15px;
+ display:grid;grid-template-columns:1fr 1fr;
+ gap:12px;margin-top:15px;
 }
-
 .stat{
- background:#0b1120;
- padding:15px;
- border-radius:8px;
- text-align:center;
+ background:#0b1120;padding:15px;
+ border-radius:8px;text-align:center;
 }
-
 .stat strong{
- display:block;
- margin-top:8px;
- font-size:20px;
- color:#38bdf8;
+ display:block;margin-top:8px;
+ font-size:19px;color:#38bdf8;
 }
-
 .bull{color:#22c55e!important}
 .bear{color:#f87171!important}
 .neutral{color:#facc15!important}
-
 .warning{
- color:#fde68a;
- background:#422006;
- padding:12px;
- border-radius:8px;
- font-size:12px;
- line-height:1.6;
+ color:#fde68a;background:#422006;
+ padding:12px;border-radius:8px;
+ font-size:12px;line-height:1.6;
 }
-
-.footer{
- text-align:center;
- color:#64748b;
- font-size:12px;
- margin:20px;
+.history{
+ padding:10px;background:#0b1120;
+ margin:8px 0;border-radius:7px;
+ font-size:13px;
+}
+.footer{text-align:center;color:#64748b;font-size:12px;margin:20px}
+@media(max-width:450px){
+ .grid{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
@@ -134,30 +76,37 @@ button{
 <body>
 <div class="container">
 
-<h1>⚡ AI Forex Signal Dashboard</h1>
-<p class="subtitle">Live Forex Data & Technical Analysis</p>
+<h1>⚡ AI Forex Signal Dashboard V2</h1>
+<p class="subtitle">Forex Technical Analysis System</p>
 
 <div class="card">
 
 <label>Select Broker</label>
 <select id="broker">
-<option value="Quotex">Quotex</option>
-<option value="Binomo">Binomo</option>
-<option value="Pocket Option">Pocket Option</option>
-<option value="Olymp Trade">Olymp Trade</option>
+<option>Quotex</option>
+<option>Binomo</option>
+<option>Pocket Option</option>
+<option>Olymp Trade</option>
+<option>ExpertOption</option>
 </select>
 
 <label>Currency Pair</label>
 <select id="pair">
-<option value="EUR/USD">EUR/USD</option>
-<option value="GBP/USD">GBP/USD</option>
-<option value="USD/JPY">USD/JPY</option>
-<option value="USD/CHF">USD/CHF</option>
+<option>EUR/USD</option>
+<option>GBP/USD</option>
+<option>USD/JPY</option>
+<option>USD/CHF</option>
+</select>
+
+<label>Timeframe</label>
+<select id="timeframe">
+<option value="1min">1 Minute</option>
+<option value="5min">5 Minutes</option>
+<option value="15min">15 Minutes</option>
 </select>
 
 <label>Refresh Interval</label>
 <select id="refresh">
-<option value="5000">5 Seconds</option>
 <option value="10000">10 Seconds</option>
 <option value="15000">15 Seconds</option>
 <option value="30000">30 Seconds</option>
@@ -165,59 +114,29 @@ button{
 </select>
 
 <label>Twelve Data API Key</label>
-<input id="apiKey" type="password"
-placeholder="Enter your API key">
+<input id="apiKey" type="password" placeholder="Enter API key">
 
 <button onclick="start()">CONNECT LIVE DATA</button>
-
-<button onclick="stop()" style="background:#334155">
-STOP AUTO REFRESH
-</button>
+<button onclick="stop()" style="background:#334155">STOP AUTO REFRESH</button>
 
 <div class="price" id="price">---</div>
-
-<div class="status" id="status">
-Waiting for live connection...
-</div>
+<div class="status" id="status">Waiting for connection...</div>
 
 <div class="signal">
-<p>MARKET ANALYSIS</p>
+<p>MARKET SIGNAL</p>
 <h2 id="signal" class="neutral">WAITING</h2>
-<p id="reason">Connect live data to begin analysis.</p>
+<p id="reason">Connect market data to begin.</p>
 </div>
 
 <div class="grid">
-
-<div class="stat">
-EMA 9
-<strong id="ema9">---</strong>
-</div>
-
-<div class="stat">
-EMA 21
-<strong id="ema21">---</strong>
-</div>
-
-<div class="stat">
-RSI 14
-<strong id="rsi">---</strong>
-</div>
-
-<div class="stat">
-Momentum
-<strong id="momentum">---</strong>
-</div>
-
-<div class="stat">
-Market Trend
-<strong id="trend">---</strong>
-</div>
-
-<div class="stat">
-Selected Broker
-<strong id="selectedBroker">Quotex</strong>
-</div>
-
+<div class="stat">EMA 9<strong id="ema9">---</strong></div>
+<div class="stat">EMA 21<strong id="ema21">---</strong></div>
+<div class="stat">RSI 14<strong id="rsi">---</strong></div>
+<div class="stat">Momentum<strong id="momentum">---</strong></div>
+<div class="stat">Market Trend<strong id="trend">---</strong></div>
+<div class="stat">Broker<strong id="selectedBroker">Quotex</strong></div>
+<div class="stat">Signal Score<strong id="score">---</strong></div>
+<div class="stat">Candles<strong id="candles">---</strong></div>
 </div>
 </div>
 
@@ -226,245 +145,201 @@ Selected Broker
 <p id="details">Waiting for market data...</p>
 </div>
 
-<div class="warning">
-Educational market analysis only. Live market data may be delayed.
-Indicators cannot guarantee future price movements.
-This dashboard does not execute trades.
+<div class="card">
+<h3>📜 Signal History</h3>
+<div id="history">No signals yet.</div>
 </div>
 
-<p class="footer">
-AI Forex Dashboard • Live Data
-</p>
+<div class="warning">
+Educational analysis only. Signals are not guaranteed predictions.
+No automatic trade execution. Broker selection is for display only.
+API data availability and delays depend on your data provider.
+Test with demo data before making any financial decisions.
+</div>
 
+<p class="footer">AI Forex Dashboard V2</p>
 </div>
 
 <script>
-
 let timer=null;
 let prices=[];
+let historyList=[];
 
 function EMA(data,period){
-
  let k=2/(period+1);
  let result=data[0];
-
  for(let i=1;i<data.length;i++){
   result=data[i]*k+result*(1-k);
  }
-
  return result;
 }
 
 function RSI(data,period=14){
-
- let gains=0;
- let losses=0;
-
+ let gains=0,losses=0;
  for(let i=data.length-period;i<data.length;i++){
-
   let diff=data[i]-data[i-1];
-
   if(diff>0)gains+=diff;
   else losses+=Math.abs(diff);
-
  }
-
- if(losses===0)return 100;
-
+ if(losses===0)return gains===0?50:100;
  let rs=gains/losses;
-
  return 100-(100/(1+rs));
 }
 
-function calculateMomentum(data){
-
+function momentum(data){
  let current=data[data.length-1];
  let previous=data[data.length-6];
-
  return ((current-previous)/previous)*100;
 }
 
 async function fetchData(){
-
  const key=document.getElementById("apiKey").value.trim();
  const pair=document.getElementById("pair").value;
+ const timeframe=document.getElementById("timeframe").value;
 
  if(!key){
-  document.getElementById("status").innerText=
-  "Please enter your API key.";
+  document.getElementById("status").innerText="Enter API key first.";
   return;
  }
 
  try{
+  document.getElementById("status").innerText="Fetching candles...";
 
-  document.getElementById("status").innerText=
-  "Fetching live market data...";
-
-  const url=
-  "https://api.twelvedata.com/time_series"+
-  "?symbol="+encodeURIComponent(pair)+
-  "&interval=1min"+
-  "&outputsize=100"+
-  "&apikey="+encodeURIComponent(key);
+  const url="https://api.twelvedata.com/time_series?symbol="+
+   encodeURIComponent(pair)+
+   "&interval="+encodeURIComponent(timeframe)+
+   "&outputsize=100&apikey="+encodeURIComponent(key);
 
   const response=await fetch(url);
+  if(!response.ok)throw new Error("HTTP "+response.status);
+
   const data=await response.json();
 
-  if(!data.values){
-   throw new Error(data.message||"Data unavailable");
-  }
+  if(!data.values)throw new Error(data.message||"No candle data received");
 
-  prices=data.values
-  .map(x=>Number(x.close))
-  .reverse();
+  prices=data.values.map(x=>Number(x.close)).reverse();
 
-  if(prices.length<22){
-   throw new Error("Not enough candle data");
-  }
+  if(prices.length<22)throw new Error("Not enough candles");
 
   const current=prices[prices.length-1];
 
-  document.getElementById("price").innerText=
-  current.toFixed(5);
-
-  document.getElementById("status").innerText=
-  "Connected • "+pair+" • "+
-  new Date().toLocaleTimeString();
-
+  document.getElementById("price").innerText=current.toFixed(5);
+  document.getElementById("candles").innerText=prices.length;
   document.getElementById("selectedBroker").innerText=
-  document.getElementById("broker").value;
+   document.getElementById("broker").value;
 
   calculateIndicators();
 
- }catch(error){
-
   document.getElementById("status").innerText=
-  "Connection error: "+error.message;
+   "Connected | "+pair+" | "+new Date().toLocaleTimeString();
 
+ }catch(error){
+  document.getElementById("status").innerText="Error: "+error.message;
  }
 }
 
- function calculateIndicators(){
+function calculateIndicators(){
+ if(prices.length<22)return;
 
- if(prices.length < 22){
-   document.getElementById("status").innerText =
-   "Waiting for sufficient market data...";
-   return;
+ const e9=EMA(prices,9);
+ const e21=EMA(prices,21);
+ const rsi=RSI(prices,14);
+ const mom=momentum(prices);
+
+ let score=0;
+
+ if(e9>e21)score++;
+ else if(e9<e21)score--;
+
+ if(rsi>55)score++;
+ else if(rsi<45)score--;
+
+ if(mom>0)score++;
+ else if(mom<0)score--;
+
+ let signal="WAIT";
+ let cls="neutral";
+
+ if(score>=2){
+  signal="BUY";
+  cls="bull";
+ }else if(score<=-2){
+  signal="SELL";
+  cls="bear";
  }
 
- const e9 = EMA(prices, 9);
- const e21 = EMA(prices, 21);
- const rsi = RSI(prices, 14);
- const momentum = calculateMomentum(prices);
+ document.getElementById("ema9").innerText=e9.toFixed(5);
+ document.getElementById("ema21").innerText=e21.toFixed(5);
+ document.getElementById("rsi").innerText=rsi.toFixed(2);
+ document.getElementById("momentum").innerText=mom.toFixed(4)+"%";
+ document.getElementById("score").innerText=score+"/3";
 
- const previousE9 = EMA(prices.slice(0,-1), 9);
- const previousE21 = EMA(prices.slice(0,-1), 21);
+ const trend=document.getElementById("trend");
 
- let score = 0;
-
- // EMA trend
- if(e9 > e21) score += 1;
- else if(e9 < e21) score -= 1;
-
- // RSI analysis
- if(rsi > 50) score += 1;
- else if(rsi < 50) score -= 1;
-
- // Momentum
- if(momentum > 0) score += 1;
- else if(momentum < 0) score -= 1;
-
- // Crossover confirmation
- if(previousE9 <= previousE21 && e9 > e21)
-   score += 1;
-
- if(previousE9 >= previousE21 && e9 < e21)
-   score -= 1;
-
- // Directional bias
- let signal = "WEAK BUY";
- let cls = "neutral";
-
- if(score >= 2){
-   signal = "BUY";
-   cls = "bull";
+ if(e9>e21){
+  trend.innerText="UPWARD";
+  trend.className="bull";
+ }else if(e9<e21){
+  trend.innerText="DOWNWARD";
+  trend.className="bear";
+ }else{
+  trend.innerText="SIDEWAYS";
+  trend.className="neutral";
  }
- else if(score <= -2){
-   signal = "SELL";
-   cls = "bear";
- }
- else if(score > 0){
-   signal = "WEAK BUY";
-   cls = "bull";
- }
- else if(score < 0){
-   signal = "WEAK SELL";
-   cls = "bear";
- }
- 
-else {
-   const last = prices[prices.length - 1];
-   const prev = prices[prices.length - 2];
 
-   if (last >= prev) {
-     signal = "BUY";
-     cls = "bull";
-   } else {
-     signal = "SELL";
-     cls = "bear";
-   }
+ const signalEl=document.getElementById("signal");
+ signalEl.innerText=signal;
+ signalEl.className=cls;
+
+ document.getElementById("reason").innerText=
+  "EMA, RSI and momentum agreement: "+Math.abs(score)+"/3";
+
+ document.getElementById("details").innerText=
+  "Pair: "+document.getElementById("pair").value+
+  " | Timeframe: "+document.getElementById("timeframe").value+
+  " | Broker: "+document.getElementById("broker").value+
+  " | RSI: "+rsi.toFixed(2)+
+  " | Momentum: "+mom.toFixed(4)+"%";
+
+ addHistory(signal,score);
 }
 
- // Agreement score (not win probability)
- const confidence = Math.round(
-   Math.abs(score) / 4 * 100
- );
+function addHistory(signal,score){
+ const now=new Date().toLocaleTimeString();
+ const last=historyList[0];
 
- document.getElementById("ema9").innerText =
-   e9.toFixed(5);
+ if(last && last.signal===signal && last.score===score)return;
 
- document.getElementById("ema21").innerText =
-   e21.toFixed(5);
+ historyList.unshift({signal,score,time:now});
+ historyList=historyList.slice(0,10);
 
- document.getElementById("rsi").innerText =
-   rsi.toFixed(2);
-
- document.getElementById("momentum").innerText =
-   momentum.toFixed(4) + "%";
-
- const trendEl = document.getElementById("trend");
-
-if (e9 > e21) {
-  trendEl.innerText = "UPWARD TREND";
-  trendEl.className = "bull";
-} else if (e9 < e21) {
-  trendEl.innerText = "DOWNWARD TREND";
-  trendEl.className = "bear";
-} else {
-  trendEl.innerText = "SIDEWAYS";
-  trendEl.className = "neutral";
+ document.getElementById("history").innerHTML=
+  historyList.map(item=>
+   '<div class="history">'+
+   item.time+' | <strong>'+item.signal+
+   '</strong> | Score: '+item.score+'/3</div>'
+  ).join("");
 }
 
- // Display signal
- const signalEl = document.getElementById("signal");
-
- signalEl.innerText = signal;
- signalEl.className = cls;
-
- // Confidence
- document.getElementById("reason").innerText =
-   "Indicator agreement: " + confidence +
-   "% | RSI: " + rsi.toFixed(2) +
-   " | EMA: " + (e9 > e21 ? "Bullish" : "Bearish") +
-   " | Momentum: " + momentum.toFixed(4) + "%";
-
- document.getElementById("details").innerText =
-   "Pair: " + document.getElementById("pair").value +
-   " | Broker: " + document.getElementById("broker").value +
-   " | Analysis: " + signal +
-   " | Score: " + score + "/4" +
-   " | RSI: " + rsi.toFixed(2);
+function start(){
+ stop();
+ fetchData();
+ timer=setInterval(fetchData,
+  Number(document.getElementById("refresh").value));
 }
 
+function stop(){
+ if(timer!==null){
+  clearInterval(timer);
+  timer=null;
+ }
+ document.getElementById("status").innerText="Auto refresh stopped.";
+}
 
- 
+document.getElementById("broker").addEventListener("change",function(){
+ document.getElementById("selectedBroker").innerText=this.value;
+});
+</script>
+</body>
+</html>
+
